@@ -161,3 +161,10 @@ reproduces on the real OANDA 1m fixture — see `docs/S25_REPLAY.md`.
 - Every alert ends with `Analysis only, not financial advice.`
 - Telegram / email notifiers are dry-run stubs.
 - Reference files stay redacted (`[REDACTED …]`).
+
+## Deployed-runtime notes
+- Worker agents get internal snapshot JSON and carry **no** guardrail. Only owner free text goes through as `guardContent` (NovaMart pattern). The mentor's output is checked with Bedrock `ApplyGuardrail` (source=OUTPUT).
+- `tvDatafeed` (TV:OANDA, no-login mode) is vendored into the CodeZip by `deploy.py --step stage`, with yfinance as the fallback. Every alert includes a `data:` line.
+- The deployed runtime's alerts are file-style JSON at `s3://<SnapshotBucket>/alerts/<run_id>.json` and `alerts/latest.json`. Nothing is sent externally. Read the latest one with `python scripts/latest_call.py`.
+- To enable Transaction Search: `python scripts/enable_transaction_search.py`.
+- To ask a question through the Cognito frontend: `python scripts/frontend_chat.py "question"`. The test-user file lives outside the repo.

@@ -81,3 +81,21 @@ def test_no_broker_or_order_code_in_repo():
     bad = re.compile(r"(oandapyV20|MetaTrader5|ccxt|alpaca|ib_insync|create_order|place_order\()", re.I)
     hits = [p for p in (root / "ict_pipeline").rglob("*.py") if bad.search(p.read_text())]
     assert hits == []
+
+
+def test_workers_unguarded_mentor_output_guarded():
+    """Internal payloads are not guarded input; mentor output goes through the Bedrock output guard."""
+    import inspect
+    from ict_pipeline import runtime
+    src = inspect.getsource(runtime.StrandsLLM.invoke)
+    assert "guardrail_id" not in src
+    from ict_pipeline.agents.mentor import MentorAgent
+    from ict_pipeline.guardrails import bedrock_output_guard
+
+    class FakeBR:
+        def apply_guardrail(self, **kw):
+            assert kw["source"] == "OUTPUT"
+            return {"action": "GUARDRAIL_INTERVENED" if "MT5" in kw["content"][0]["text"]["text"] else "NONE"}
+    g = bedrock_output_guard("gid", "1", client=FakeBR())
+    assert g("fine analysis")[0] is True and g("log into MT5 now")[0] is False
+    assert bedrock_output_guard("", "") is None

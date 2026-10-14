@@ -17,8 +17,25 @@ class Notifier(Protocol):
 
 
 class FileNotifier:
-    def __init__(self, directory: str = "out/alerts"):
+    """Writes the call to <dir>/<run_id>.md + calls.jsonl. If ALERT_BUCKET is set (deployed runtime), the same
+    file-style records are mirrored to s3://ALERT_BUCKET/alerts/ (inside the stack; nothing sent externally)."""
+
+    def __init__(self, directory: str = "out/alerts", bucket: str | None = None, s3=None):
         self.dir = directory
+        self.bucket = bucket if bucket is not None else os.environ.get("ALERT_BUCKET", "")
+        self._s3 = s3
+
+    def _mirror(self, run_id, text, call):
+        if not self.bucket:
+            return None
+        if self._s3 is None:
+            import boto3
+            self._s3 = boto3.client("s3")
+        body = json.dumps({"run_id": run_id, "text": text, "call": call,
+                           "written_at": datetime.utcnow().isoformat() + "Z"}, default=str)
+        for key in (f"alerts/{run_id}.json", "alerts/latest.json"):
+            self._s3.put_object(Bucket=self.bucket, Key=key, Body=body.encode(), ContentType="application/json")
+        return f"s3://{self.bucket}/alerts/{run_id}.json"
 
     def send(self, text, call):
         os.makedirs(self.dir, exist_ok=True)
@@ -28,7 +45,12 @@ class FileNotifier:
         with open(os.path.join(self.dir, "calls.jsonl"), "a") as f:
             f.write(json.dumps(call, default=str) + "\n")
         log.info("alert written to %s", path)
-        return {"channel": "file", "path": path, "sent": False}
+        s3_uri = None
+        try:
+            s3_uri = self._mirror(call.get("run_id", "run"), text, call)
+        except Exception as e:  # never break the cycle on the mirror
+            log.warning("alert S3 mirror failed: %s", e)
+        return {"channel": "file", "path": path, "s3": s3_uri, "sent": False}
 
 
 class TelegramStub:

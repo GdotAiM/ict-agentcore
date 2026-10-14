@@ -112,15 +112,24 @@ def main():
             UserPoolId=pool_id, ClientName=f"{PROJECT}-web",
             ExplicitAuthFlows=["ALLOW_USER_PASSWORD_AUTH", "ALLOW_REFRESH_TOKEN_AUTH"],
             GenerateSecret=False)["UserPoolClient"]["ClientId"]
-    owner = os.environ.get("OWNER_EMAIL", "owner@example.com")
+    owner = os.environ.get("OWNER_EMAIL", "ict-owner@example.com")
     pw = os.environ.get("COGNITO_TEST_PASSWORD") or ("Ict!" + secrets.token_urlsafe(12) + "9")
+    # Sandbox roles may deny AdminSetUserPassword: create with a temporary password and answer
+    # NEW_PASSWORD_REQUIRED through the public client flow (same approach as NovaMart).
     try:
-        cognito.admin_create_user(UserPoolId=pool_id, Username=owner, TemporaryPassword=pw,
-                                  MessageAction="SUPPRESS", UserAttributes=[{"Name": "email", "Value": owner},
-                                                                            {"Name": "email_verified", "Value": "true"}])
-        cognito.admin_set_user_password(UserPoolId=pool_id, Username=owner, Password=pw, Permanent=True)
-    except cognito.exceptions.UsernameExistsException:
+        cognito.admin_delete_user(UserPoolId=pool_id, Username=owner)
+    except Exception:
         pass
+    tmp = "Tmp!" + secrets.token_urlsafe(10) + "7a"
+    cognito.admin_create_user(UserPoolId=pool_id, Username=owner, TemporaryPassword=tmp, MessageAction="SUPPRESS",
+                              UserAttributes=[{"Name": "email", "Value": owner},
+                                              {"Name": "email_verified", "Value": "true"}])
+    ch = cognito.initiate_auth(ClientId=client_id, AuthFlow="USER_PASSWORD_AUTH",
+                               AuthParameters={"USERNAME": owner, "PASSWORD": tmp})
+    if ch.get("ChallengeName") == "NEW_PASSWORD_REQUIRED":
+        cognito.respond_to_auth_challenge(ClientId=client_id, ChallengeName="NEW_PASSWORD_REQUIRED",
+                                          Session=ch["Session"],
+                                          ChallengeResponses={"USERNAME": owner, "NEW_PASSWORD": pw})
     # Lambda
     role_arn = ensure_role(iam)
     import zipfile, io
@@ -128,10 +137,10 @@ def main():
     with zipfile.ZipFile(buf, "w") as z:
         z.writestr("handler.py", PROXY_CODE)
     code = buf.getvalue()
-    env = {"Variables": {"AGENTCORE_RUNTIME_ARN": os.environ.get("AGENTCORE_RUNTIME_ARN", "pending"),
-                         "AWS_REGION": REGION}}
+    env = {"Variables": {"AGENTCORE_RUNTIME_ARN": os.environ.get("AGENTCORE_RUNTIME_ARN", "pending")}}
     try:
         lam.update_function_code(FunctionName=LAMBDA_NAME, ZipFile=code)
+        lam.get_waiter("function_updated_v2").wait(FunctionName=LAMBDA_NAME)
         lam.update_function_configuration(FunctionName=LAMBDA_NAME, Environment=env)
         fn = lam.get_function(FunctionName=LAMBDA_NAME)["Configuration"]["FunctionArn"]
     except lam.exceptions.ResourceNotFoundException:
@@ -142,7 +151,7 @@ def main():
         url = lam.get_function_url_config(FunctionName=LAMBDA_NAME)["FunctionUrl"]
     except Exception:
         url = lam.create_function_url_config(FunctionName=LAMBDA_NAME, AuthType="NONE",
-                                             Cors={"AllowOrigins": ["*"], "AllowMethods": ["POST", "OPTIONS"],
+                                             Cors={"AllowOrigins": ["*"], "AllowMethods": ["POST"],
                                                    "AllowHeaders": ["authorization", "content-type"]})["FunctionUrl"]
     try:
         lam.add_permission(FunctionName=LAMBDA_NAME, StatementId="FunctionURLAllowPublic",
@@ -150,12 +159,20 @@ def main():
                            FunctionUrlAuthType="NONE")
     except Exception:
         pass
+    try:  # since Oct 2025 public function URLs also need lambda:InvokeFunction (via function URL only)
+        lam.add_permission(FunctionName=LAMBDA_NAME, StatementId="FunctionURLInvokeAllowPublic",
+                           Action="lambda:InvokeFunction", Principal="*", InvokedViaFunctionUrl=True)
+    except Exception:
+        pass
     os.makedirs(os.path.join(ROOT, "frontend"), exist_ok=True)
     cfg = {"region": REGION, "userPoolId": pool_id, "clientId": client_id, "proxyUrl": url, "ownerEmail": owner}
     open(os.path.join(ROOT, "frontend", "config.js"), "w").write("window.ICT_CONFIG = " + json.dumps(cfg, indent=2) + ";\n")
-    open(os.path.join(ROOT, "frontend", ".cognito-test-user"), "w").write(json.dumps({"email": owner, "password": pw}))
+    cred_path = os.environ.get("COGNITO_TEST_USER_FILE", os.path.join(os.path.dirname(ROOT), ".ict-cognito-test-user"))
+    fd = os.open(cred_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
+        f.write(json.dumps({"email": owner, "password": pw}))
     print(json.dumps(cfg, indent=2))
-    print("Wrote frontend/config.js and frontend/.cognito-test-user (gitignored)")
+    print(f"Wrote frontend/config.js; test-user credentials at {cred_path} (outside web root, mode 600)")
 
 
 if __name__ == "__main__":

@@ -20,7 +20,7 @@ def test_ci_workflow():
 
 
 def test_stack_resources():
-    y = (ROOT / "infrastructure/stack.yaml").read_text()
+    y = (ROOT / "infrastructure/stack.yaml").read_text() + (ROOT / "infrastructure/schedules.yaml").read_text()
     for s in ("AWS::S3Vectors::VectorBucket", "AWS::S3Vectors::Index", "Dimension: 1024", "trade-state",
               "agent-sessions", "AWS::Scheduler::Schedule", "ScheduleExpressionTimezone: America/New_York",
               "xray:PutTraceSegments", "bedrock:ApplyGuardrail"):

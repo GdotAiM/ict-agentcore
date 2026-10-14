@@ -17,9 +17,9 @@ bucket = config.resource("KbBucket", "KB_BUCKET")
 vb_arn = config.resource("VectorBucketArn", "VECTOR_BUCKET_ARN")
 EMB = f"arn:aws:bedrock:{config.AWS_REGION}::foundation-model/amazon.titan-embed-text-v2:0"
 specs = [
-    ("RULES_KB_ID", "ict-rules-kb", "rules/", "rules-index"),
-    ("TRANSCRIPTS_KB_ID", "ict-transcripts-kb", "transcripts/", "transcripts-index"),
-    ("BACKTESTS_KB_ID", "ict-backtests-kb", "backtests/", "backtests-index"),
+    ("RULES_KB_ID", "ict-rules-kb", "rules/", "rules-index-v2"),
+    ("TRANSCRIPTS_KB_ID", "ict-transcripts-kb", "transcripts/", "transcripts-index-v2"),
+    ("BACKTESTS_KB_ID", "ict-backtests-kb", "backtests/", "backtests-index-v2"),
 ]
 existing = {k["name"]: k["knowledgeBaseId"] for p in agent.get_paginator("list_knowledge_bases").paginate()
             for k in p["knowledgeBaseSummaries"]}

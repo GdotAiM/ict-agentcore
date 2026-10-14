@@ -53,7 +53,7 @@ class TradingViewProvider:
         out = []
         for ts, r in df.iterrows():
             t = ts.to_pydatetime()
-            t = t.replace(tzinfo=SAST) if t.tzinfo is None else t.astimezone(SAST)  # tvDatafeed returns box-local naive
+            t = t.astimezone(SAST)  # tvDatafeed returns naive host-local time (UTC in AgentCore); astimezone treats naive as local
             out.append(Bar(t, float(r["open"]), float(r["high"]), float(r["low"]), float(r["close"])))
         return out
 

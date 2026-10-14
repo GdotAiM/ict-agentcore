@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Optional kill-zone schedules (EventBridge Scheduler, America/New_York). Separate stack because
+  some sandbox accounts (e.g. Vocareum labs) deny scheduler:* to the lab role.
+Parameters:
+  ProjectName:
+    Type: String
+    Default: ict-agentcore
+Resources:
+  # EventBridge Scheduler targets the AgentCore runtime (or a thin Lambda invoker) on kill-zone clocks.
+  # ScheduleExpressionTimezone = America/New_York so DST flips (1 Nov 2026) are automatic.
+  KillZoneScheduleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-scheduler-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:InvokeAgentRuntime
+                  - lambda:InvokeFunction
+                Resource: "*"
+
+  ScheduleAsian:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-asian
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 20-23 ? * SUN-THU *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"ASIAN"}'
+
+  ScheduleLondonOpen:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-london-open
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 2-4 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"LONDON_OPEN"}'
+
+  ScheduleNyAm:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-ny-am
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 7-9 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"NY_AM"}'
+
+  ScheduleSbLc:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-sb-lc
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 10-11 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"SILVER_BULLET"}'
+
+  ScheduleNyPm:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-ny-pm
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0,30,35,40,45,50,55 13-15 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"NY_PM"}'
+

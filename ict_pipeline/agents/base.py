@@ -62,6 +62,20 @@ def check_staleness(as_of: datetime, cycle_as_of: datetime, max_skew: timedelta 
     return as_of < cycle_as_of - max_skew
 
 
+_CLIP = {"notes": 300, "reason": 200, "invalidation_note": 200}
+
+
+def _clip_text_fields(obj):
+    """LLMs overrun free-text length caps; clip those (only) instead of discarding the whole read.
+    Prices/levels are never touched, so validation still rejects anything structurally wrong."""
+    if isinstance(obj, dict):
+        return {k: (v[:_CLIP[k] - 1] + "…" if k in _CLIP and isinstance(v, str) and len(v) > _CLIP[k]
+                    else _clip_text_fields(v)) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_clip_text_fields(x) for x in obj]
+    return obj
+
+
 class AgentRunner:
     """Wraps an LLM (Strands Agent or MockLLM) so the orchestrator always gets AgentResult."""
 
@@ -83,7 +97,7 @@ class AgentRunner:
             # agents must return JSON only
             start = text.find("{"); end = text.rfind("}")
             raw = json.loads(text[start:end + 1] if start >= 0 else text)
-            data = self.validator(raw)
+            data = self.validator(_clip_text_fields(raw))
             as_of = datetime.fromisoformat(data["as_of"]) if isinstance(data["as_of"], str) else data["as_of"]
             if check_staleness(as_of, cycle_as_of):
                 raise ValueError(f"stale as_of={as_of.isoformat()} cycle={cycle_as_of.isoformat()}")
@@ -91,6 +105,9 @@ class AgentRunner:
         except Exception as e:
             res = AgentResult(self.name, False, None, error=f"{type(e).__name__}: {e}",
                               latency_ms=(time.time() - t0) * 1000)
+        if not res.ok:
+            import logging
+            logging.getLogger("ict.agents").warning("agent %s invalid output: %s", self.name, res.error[:500])
         if self.run_log:
             self.run_log.agent_call(self.name, prompt_obj, res.data, res.latency_ms, res.tokens, res.ok, res.error)
         return res

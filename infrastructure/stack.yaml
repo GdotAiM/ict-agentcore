@@ -113,37 +113,40 @@ Resources:
     Type: AWS::S3Vectors::Index
     Properties:
       VectorBucketArn: !GetAtt VectorStoreBucket.VectorBucketArn
-      IndexName: rules-index
+      IndexName: rules-index-v2
       DataType: float32
       Dimension: 1024
       DistanceMetric: cosine
       MetadataConfiguration:
         NonFilterableMetadataKeys:
           - AMAZON_BEDROCK_TEXT
+          - AMAZON_BEDROCK_METADATA
 
   TranscriptsVectorIndex:
     Type: AWS::S3Vectors::Index
     Properties:
       VectorBucketArn: !GetAtt VectorStoreBucket.VectorBucketArn
-      IndexName: transcripts-index
+      IndexName: transcripts-index-v2
       DataType: float32
       Dimension: 1024
       DistanceMetric: cosine
       MetadataConfiguration:
         NonFilterableMetadataKeys:
           - AMAZON_BEDROCK_TEXT
+          - AMAZON_BEDROCK_METADATA
 
   BacktestsVectorIndex:
     Type: AWS::S3Vectors::Index
     Properties:
       VectorBucketArn: !GetAtt VectorStoreBucket.VectorBucketArn
-      IndexName: backtests-index
+      IndexName: backtests-index-v2
       DataType: float32
       Dimension: 1024
       DistanceMetric: cosine
       MetadataConfiguration:
         NonFilterableMetadataKeys:
           - AMAZON_BEDROCK_TEXT
+          - AMAZON_BEDROCK_METADATA
 
   AgentCoreExecutionRole:
     Type: AWS::IAM::Role
@@ -208,6 +211,7 @@ Resources:
                   - bedrock-agentcore:GetWorkloadAccessToken
                   - bedrock-agentcore:GetWorkloadAccessTokenForJWT
                   - bedrock-agentcore:GetWorkloadAccessTokenForUserId
+                  - bedrock-agentcore:InvokeAgentRuntime
                 Resource: "*"
               - Effect: Allow
                 Action:
@@ -249,131 +253,54 @@ Resources:
       LogGroupName: !Sub /aws/bedrock/agentcore/${ProjectName}
       RetentionInDays: 14
 
-  # EventBridge Scheduler targets the AgentCore runtime (or a thin Lambda invoker) on kill-zone clocks.
-  # ScheduleExpressionTimezone = America/New_York so DST flips (1 Nov 2026) are automatic.
-  KillZoneScheduleRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub ${ProjectName}-scheduler-role
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: scheduler.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: InvokeRuntime
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - bedrock-agentcore:InvokeAgentRuntime
-                  - lambda:InvokeFunction
-                Resource: "*"
-
-  ScheduleAsian:
-    Type: AWS::Scheduler::Schedule
-    Properties:
-      Name: !Sub ${ProjectName}-kz-asian
-      FlexibleTimeWindow: {Mode: "OFF"}
-      ScheduleExpression: cron(0/5 20-23 ? * SUN-THU *)
-      ScheduleExpressionTimezone: America/New_York
-      State: DISABLED
-      Target:
-        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
-        RoleArn: !GetAtt KillZoneScheduleRole.Arn
-        Input: '{"kill_zone":"ASIAN"}'
-
-  ScheduleLondonOpen:
-    Type: AWS::Scheduler::Schedule
-    Properties:
-      Name: !Sub ${ProjectName}-kz-london-open
-      FlexibleTimeWindow: {Mode: "OFF"}
-      ScheduleExpression: cron(0/5 2-4 ? * MON-FRI *)
-      ScheduleExpressionTimezone: America/New_York
-      State: DISABLED
-      Target:
-        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
-        RoleArn: !GetAtt KillZoneScheduleRole.Arn
-        Input: '{"kill_zone":"LONDON_OPEN"}'
-
-  ScheduleNyAm:
-    Type: AWS::Scheduler::Schedule
-    Properties:
-      Name: !Sub ${ProjectName}-kz-ny-am
-      FlexibleTimeWindow: {Mode: "OFF"}
-      ScheduleExpression: cron(0/5 7-9 ? * MON-FRI *)
-      ScheduleExpressionTimezone: America/New_York
-      State: DISABLED
-      Target:
-        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
-        RoleArn: !GetAtt KillZoneScheduleRole.Arn
-        Input: '{"kill_zone":"NY_AM"}'
-
-  ScheduleSbLc:
-    Type: AWS::Scheduler::Schedule
-    Properties:
-      Name: !Sub ${ProjectName}-kz-sb-lc
-      FlexibleTimeWindow: {Mode: "OFF"}
-      ScheduleExpression: cron(0/5 10-11 ? * MON-FRI *)
-      ScheduleExpressionTimezone: America/New_York
-      State: DISABLED
-      Target:
-        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
-        RoleArn: !GetAtt KillZoneScheduleRole.Arn
-        Input: '{"kill_zone":"SILVER_BULLET"}'
-
-  ScheduleNyPm:
-    Type: AWS::Scheduler::Schedule
-    Properties:
-      Name: !Sub ${ProjectName}-kz-ny-pm
-      FlexibleTimeWindow: {Mode: "OFF"}
-      ScheduleExpression: cron(0,30,35,40,45,50,55 13-15 ? * MON-FRI *)
-      ScheduleExpressionTimezone: America/New_York
-      State: DISABLED
-      Target:
-        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
-        RoleArn: !GetAtt KillZoneScheduleRole.Arn
-        Input: '{"kill_zone":"NY_PM"}'
-
 Outputs:
   TradeStateTableName:
     Value: !Ref TradeStateTable
-    Export: {Name: !Sub ${ProjectName}-TradeStateTable}
+    Export:
+      Name: !Sub ${ProjectName}-TradeStateTable
   OpsTableName:
     Value: !Ref OpsTable
-    Export: {Name: !Sub ${ProjectName}-OpsTable}
+    Export:
+      Name: !Sub ${ProjectName}-OpsTable
   AgentSessionsTableName:
     Value: !Ref AgentSessionsTable
-    Export: {Name: !Sub ${ProjectName}-AgentSessionsTable}
+    Export:
+      Name: !Sub ${ProjectName}-AgentSessionsTable
   SnapshotBucketName:
     Value: !Ref SnapshotBucket
-    Export: {Name: !Sub ${ProjectName}-SnapshotBucket}
+    Export:
+      Name: !Sub ${ProjectName}-SnapshotBucket
   KbBucketName:
     Value: !Ref KbDocumentsBucket
-    Export: {Name: !Sub ${ProjectName}-KbBucket}
+    Export:
+      Name: !Sub ${ProjectName}-KbBucket
   VectorStoreBucketName:
     Value: !Sub
       - '${ProjectName}-vectors-${AWS::AccountId}-${ShortUUID}'
       - ShortUUID: !Select [0, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
-    Export: {Name: !Sub ${ProjectName}-VectorBucket}
+    Export:
+      Name: !Sub ${ProjectName}-VectorBucket
   VectorStoreBucketArn:
     Value: !GetAtt VectorStoreBucket.VectorBucketArn
-    Export: {Name: !Sub ${ProjectName}-VectorBucketArn}
+    Export:
+      Name: !Sub ${ProjectName}-VectorBucketArn
   RulesVectorIndexName:
-    Value: rules-index
-    Export: {Name: !Sub ${ProjectName}-RulesVectorIndex}
+    Value: rules-index-v2
+    Export:
+      Name: !Sub ${ProjectName}-RulesVectorIndex
   TranscriptsVectorIndexName:
-    Value: transcripts-index
-    Export: {Name: !Sub ${ProjectName}-TranscriptsVectorIndex}
+    Value: transcripts-index-v2
+    Export:
+      Name: !Sub ${ProjectName}-TranscriptsVectorIndex
   BacktestsVectorIndexName:
-    Value: backtests-index
-    Export: {Name: !Sub ${ProjectName}-BacktestsVectorIndex}
+    Value: backtests-index-v2
+    Export:
+      Name: !Sub ${ProjectName}-BacktestsVectorIndex
   AgentCoreRoleArn:
     Value: !GetAtt AgentCoreExecutionRole.Arn
-    Export: {Name: !Sub ${ProjectName}-AgentCoreRoleArn}
+    Export:
+      Name: !Sub ${ProjectName}-AgentCoreRoleArn
   AgentLogGroupName:
     Value: !Ref AgentLogGroup
-    Export: {Name: !Sub ${ProjectName}-AgentLogGroup}
+    Export:
+      Name: !Sub ${ProjectName}-AgentLogGroup

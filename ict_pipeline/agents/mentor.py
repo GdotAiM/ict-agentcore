@@ -38,8 +38,8 @@ def render_deterministic(call: CombinedCall, owner: str) -> str:
              f"**{call.headline}**"]
     if call.degraded:
         lines.append("_degraded mode (token budget ≥ 90%): orchestrator + rules + open-trade monitor only_")
-    if call.fallback_used:
-        lines.append("data: fallback")
+    lines.append(f"data: fallback ({call.data_source or 'unknown'})" if call.fallback_used
+                 else f"data: {call.data_source or 'unknown'}")
     if call.market_summary:
         lines.append("Market: " + "; ".join(f"{k} {v}" for k, v in call.market_summary.items()))
     for t in call.trades:
@@ -62,8 +62,8 @@ def render_deterministic(call: CombinedCall, owner: str) -> str:
 
 
 class MentorAgent:
-    def __init__(self, llm=None, owner: str = "owner", kb_retriever=None):
-        self.llm, self.owner, self.kb = llm, owner, kb_retriever
+    def __init__(self, llm=None, owner: str = "owner", kb_retriever=None, output_guard=None):
+        self.llm, self.owner, self.kb, self.output_guard = llm, owner, kb_retriever, output_guard
 
     def compose(self, call: CombinedCall, citations: List[dict] | None = None) -> str:
         payload = {"combined_call": call.model_dump(mode="json"), "citations": citations or []}
@@ -78,7 +78,18 @@ class MentorAgent:
                     text = str(self.llm(prompt))
             except Exception:
                 text = render_deterministic(call, self.owner)
+        src_line = (f"data: fallback ({call.data_source or 'unknown'})" if call.fallback_used
+                    else f"data: {call.data_source or 'unknown'}")
+        if src_line not in text:
+            text = src_line + "\n" + text
         ok, cleaned, reasons = filter_outbound(text)
+        if ok and self.output_guard is not None and self.llm is not None:
+            try:
+                g_ok, _ = self.output_guard(cleaned)
+            except Exception:
+                g_ok = True  # guard service unavailable: local filter_outbound already passed
+            if not g_ok:
+                ok, reasons = False, ["BEDROCK_GUARDRAIL_OUTPUT"]
         if not ok:
             # Guardrail intervened: fall back to the deterministic safe render (still mentor path).
             cleaned = render_deterministic(call, self.owner)

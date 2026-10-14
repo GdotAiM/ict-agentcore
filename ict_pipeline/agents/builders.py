@@ -25,7 +25,7 @@ def build_worker(name: str, system: str, tools=None, guardrail_id: str = "", gua
     from strands import Agent
     return Agent(name=name, system_prompt=f"{UNTRUSTED_RULE}\n\n{system}",
                  model=_bedrock_model(WORKER_MODEL_ID, guardrail_id, guardrail_version),
-                 tools=tools or [])
+                 tools=tools or [], callback_handler=None)
 
 
 def build_orchestrator_agent(guardrail_id: str = "", guardrail_version: str = ""):
