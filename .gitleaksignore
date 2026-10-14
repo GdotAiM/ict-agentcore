@@ -1,2 +1,3 @@
 # Known false positive: dummy "api_key" string in the guardrail-block test fixture (tests/test_acceptance.py)
+5013869c8bf83584360d842f5e32ad87abfb274d:tests/test_acceptance.py:generic-api-key:252
 c301356dbae4c7ab39c86e35d4c599f1e04cee30:tests/test_acceptance.py:generic-api-key:252
