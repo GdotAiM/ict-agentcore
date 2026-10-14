@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>ICT analysis (analysis only)</title>
+<script src="config.js"></script>
+<style>body{font-family:system-ui;max-width:760px;margin:2rem auto}pre{white-space:pre-wrap;background:#f4f4f4;padding:1rem}</style>
+</head><body>
+<h2>ICT pipeline: ask "why was X blocked?" / "latest call"</h2>
+<p><em>Analysis only, not financial advice. This UI cannot place orders.</em></p>
+<input id="email" placeholder="email"> <input id="pw" type="password" placeholder="password"> <button onclick="login()">Sign in</button>
+<br><br><textarea id="q" rows="3" cols="80" placeholder="Why was S27 blocked?"></textarea><br>
+<button onclick="ask()">Ask</button><pre id="out"></pre>
+<script>
+let token=null, sid=null;
+async function login(){
+  const c=window.ICT_CONFIG;
+  const r=await fetch(`https://cognito-idp.${c.region}.amazonaws.com/`,{method:"POST",
+    headers:{"content-type":"application/x-amz-json-1.1","x-amz-target":"AWSCognitoIdentityProviderService.InitiateAuth"},
+    body:JSON.stringify({AuthFlow:"USER_PASSWORD_AUTH",ClientId:c.clientId,
+      AuthParameters:{USERNAME:email.value,PASSWORD:pw.value}})});
+  const j=await r.json(); token=j.AuthenticationResult&&j.AuthenticationResult.AccessToken;
+  out.textContent=token?"signed in":"login failed";
+}
+async function ask(){
+  const r=await fetch(window.ICT_CONFIG.proxyUrl,{method:"POST",
+    headers:{"authorization":"Bearer "+token,"content-type":"application/json"},
+    body:JSON.stringify({prompt:q.value,session_id:sid})});
+  const t=await r.text(); try{const j=JSON.parse(t); sid=j.session_id||sid; out.textContent=j.message||t;}catch(e){out.textContent=t;}
+}
+</script></body></html>

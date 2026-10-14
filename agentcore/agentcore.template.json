@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.agentcore.aws.dev/v1/agentcore.json",
+  "name": "ictagentcore",
+  "version": 1,
+  "managedBy": "CDK",
+  "tags": {"agentcore:created-by": "agentcore-cli", "agentcore:project-name": "ictagentcore"},
+  "runtimes": [
+    {
+      "name": "ict_runtime",
+      "description": "ICT analysis-only multi-agent pipeline (Strands on AgentCore Runtime)",
+      "build": "CodeZip",
+      "entrypoint": "main.py",
+      "codeLocation": "build/runtime/",
+      "runtimeVersion": "PYTHON_3_12",
+      "networkMode": "PUBLIC",
+      "protocol": "HTTP",
+      "instrumentation": {"enableOtel": false},
+      "executionRoleArn": "${AGENTCORE_ROLE_ARN}",
+      "envVars": [
+        {"name": "AWS_REGION", "value": "${AWS_REGION}"},
+        {"name": "PROJECT_NAME", "value": "${PROJECT_NAME}"},
+        {"name": "OWNER_NAME", "value": "${OWNER_NAME}"},
+        {"name": "EQUITY", "value": "${EQUITY}"},
+        {"name": "ALERT_CHANNEL", "value": "${ALERT_CHANNEL}"},
+        {"name": "RULES_KB_ID", "value": "${RULES_KB_ID}"},
+        {"name": "TRANSCRIPTS_KB_ID", "value": "${TRANSCRIPTS_KB_ID}"},
+        {"name": "BACKTESTS_KB_ID", "value": "${BACKTESTS_KB_ID}"},
+        {"name": "GUARDRAIL_ID", "value": "${GUARDRAIL_ID}"},
+        {"name": "GUARDRAIL_VERSION", "value": "${GUARDRAIL_VERSION}"},
+        {"name": "AGENTCORE_MEMORY_ID", "value": "${AGENTCORE_MEMORY_ID}"},
+        {"name": "AGENT_SESSIONS_TABLE", "value": "${PROJECT_NAME}-agent-sessions"},
+        {"name": "AGENT_LOG_GROUP", "value": "/aws/bedrock/agentcore/${PROJECT_NAME}"},
+        {"name": "AGENT_TRACING_ENABLED", "value": "true"},
+        {"name": "DAILY_TOKEN_BUDGET", "value": "${DAILY_TOKEN_BUDGET}"}
+      ]
+    }
+  ],
+  "memories": [], "knowledgeBases": [], "credentials": [], "evaluators": [], "onlineEvalConfigs": [],
+  "agentCoreGateways": [], "policyEngines": [], "configBundles": [], "abTests": [], "harnesses": [],
+  "datasets": [], "capacityProviders": [], "payments": []
+}

@@ -1,0 +1,379 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  ICT analysis-only multi-agent pipeline on Amazon Bedrock AgentCore.
+  DynamoDB trade-state + ops + agent-sessions, S3 snapshots + KB docs, S3 Vectors (Titan v2),
+  IAM, CloudWatch, EventBridge kill-zone schedules. Analysis and alerts only; never places trades.
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: ict-agentcore
+
+Resources:
+
+  TradeStateTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-trade-state
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: trade_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: trade_id
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      Tags:
+        - Key: Purpose
+          Value: single-writer-optimistic-lock-trade-state
+
+  OpsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-ops
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  AgentSessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-agent-sessions
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  SnapshotBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub
+        - '${ProjectName}-snapshots-${AWS::AccountId}-${ShortUUID}'
+        - ShortUUID: !Select [0, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  KbDocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub
+        - '${ProjectName}-kb-docs-${AWS::AccountId}-${ShortUUID}'
+        - ShortUUID: !Select [0, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  VectorStoreBucket:
+    Type: AWS::S3Vectors::VectorBucket
+    Properties:
+      VectorBucketName: !Sub
+        - '${ProjectName}-vectors-${AWS::AccountId}-${ShortUUID}'
+        - ShortUUID: !Select [0, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+
+  RulesVectorIndex:
+    Type: AWS::S3Vectors::Index
+    Properties:
+      VectorBucketArn: !GetAtt VectorStoreBucket.VectorBucketArn
+      IndexName: rules-index
+      DataType: float32
+      Dimension: 1024
+      DistanceMetric: cosine
+      MetadataConfiguration:
+        NonFilterableMetadataKeys:
+          - AMAZON_BEDROCK_TEXT
+
+  TranscriptsVectorIndex:
+    Type: AWS::S3Vectors::Index
+    Properties:
+      VectorBucketArn: !GetAtt VectorStoreBucket.VectorBucketArn
+      IndexName: transcripts-index
+      DataType: float32
+      Dimension: 1024
+      DistanceMetric: cosine
+      MetadataConfiguration:
+        NonFilterableMetadataKeys:
+          - AMAZON_BEDROCK_TEXT
+
+  BacktestsVectorIndex:
+    Type: AWS::S3Vectors::Index
+    Properties:
+      VectorBucketArn: !GetAtt VectorStoreBucket.VectorBucketArn
+      IndexName: backtests-index
+      DataType: float32
+      Dimension: 1024
+      DistanceMetric: cosine
+      MetadataConfiguration:
+        NonFilterableMetadataKeys:
+          - AMAZON_BEDROCK_TEXT
+
+  AgentCoreExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-agentcore-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - bedrock.amazonaws.com
+                - bedrock-agentcore.amazonaws.com
+                - lambda.amazonaws.com
+                - scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: AgentCoreProjectPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                  - bedrock:ApplyGuardrail
+                  - bedrock:GetGuardrail
+                  - bedrock:Retrieve
+                  - bedrock:GetKnowledgeBase
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - cloudformation:ListExports
+                  - cloudformation:DescribeStacks
+                  - sts:GetCallerIdentity
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:CreateLogDelivery
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                  - xray:GetSamplingRules
+                  - xray:GetSamplingTargets
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:CreateEvent
+                  - bedrock-agentcore:GetEvent
+                  - bedrock-agentcore:ListEvents
+                  - bedrock-agentcore:GetMemory
+                  - bedrock-agentcore:ListMemories
+                  - bedrock-agentcore:RetrieveMemoryRecords
+                  - bedrock-agentcore:ListMemoryRecords
+                  - bedrock-agentcore:GetWorkloadAccessToken
+                  - bedrock-agentcore:GetWorkloadAccessTokenForJWT
+                  - bedrock-agentcore:GetWorkloadAccessTokenForUserId
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !GetAtt TradeStateTable.Arn
+                  - !GetAtt OpsTable.Arn
+                  - !GetAtt AgentSessionsTable.Arn
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !GetAtt SnapshotBucket.Arn
+                  - !Sub ${SnapshotBucket.Arn}/*
+                  - !GetAtt KbDocumentsBucket.Arn
+                  - !Sub ${KbDocumentsBucket.Arn}/*
+              - Effect: Allow
+                Action:
+                  - s3vectors:*
+                Resource: "*"
+              - Effect: Allow
+                Action: cloudwatch:PutMetricData
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    cloudwatch:namespace: ICT/Pipeline
+
+  AgentLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/bedrock/agentcore/${ProjectName}
+      RetentionInDays: 14
+
+  # EventBridge Scheduler targets the AgentCore runtime (or a thin Lambda invoker) on kill-zone clocks.
+  # ScheduleExpressionTimezone = America/New_York so DST flips (1 Nov 2026) are automatic.
+  KillZoneScheduleRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${ProjectName}-scheduler-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: InvokeRuntime
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock-agentcore:InvokeAgentRuntime
+                  - lambda:InvokeFunction
+                Resource: "*"
+
+  ScheduleAsian:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-asian
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 20-23 ? * SUN-THU *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"ASIAN"}'
+
+  ScheduleLondonOpen:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-london-open
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 2-4 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"LONDON_OPEN"}'
+
+  ScheduleNyAm:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-ny-am
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 7-9 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"NY_AM"}'
+
+  ScheduleSbLc:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-sb-lc
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0/5 10-11 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"SILVER_BULLET"}'
+
+  ScheduleNyPm:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Name: !Sub ${ProjectName}-kz-ny-pm
+      FlexibleTimeWindow: {Mode: "OFF"}
+      ScheduleExpression: cron(0,30,35,40,45,50,55 13-15 ? * MON-FRI *)
+      ScheduleExpressionTimezone: America/New_York
+      State: DISABLED
+      Target:
+        Arn: !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-cycle-invoker
+        RoleArn: !GetAtt KillZoneScheduleRole.Arn
+        Input: '{"kill_zone":"NY_PM"}'
+
+Outputs:
+  TradeStateTableName:
+    Value: !Ref TradeStateTable
+    Export: {Name: !Sub ${ProjectName}-TradeStateTable}
+  OpsTableName:
+    Value: !Ref OpsTable
+    Export: {Name: !Sub ${ProjectName}-OpsTable}
+  AgentSessionsTableName:
+    Value: !Ref AgentSessionsTable
+    Export: {Name: !Sub ${ProjectName}-AgentSessionsTable}
+  SnapshotBucketName:
+    Value: !Ref SnapshotBucket
+    Export: {Name: !Sub ${ProjectName}-SnapshotBucket}
+  KbBucketName:
+    Value: !Ref KbDocumentsBucket
+    Export: {Name: !Sub ${ProjectName}-KbBucket}
+  VectorStoreBucketName:
+    Value: !Sub
+      - '${ProjectName}-vectors-${AWS::AccountId}-${ShortUUID}'
+      - ShortUUID: !Select [0, !Split ['-', !Select [2, !Split ['/', !Ref 'AWS::StackId']]]]
+    Export: {Name: !Sub ${ProjectName}-VectorBucket}
+  VectorStoreBucketArn:
+    Value: !GetAtt VectorStoreBucket.VectorBucketArn
+    Export: {Name: !Sub ${ProjectName}-VectorBucketArn}
+  RulesVectorIndexName:
+    Value: rules-index
+    Export: {Name: !Sub ${ProjectName}-RulesVectorIndex}
+  TranscriptsVectorIndexName:
+    Value: transcripts-index
+    Export: {Name: !Sub ${ProjectName}-TranscriptsVectorIndex}
+  BacktestsVectorIndexName:
+    Value: backtests-index
+    Export: {Name: !Sub ${ProjectName}-BacktestsVectorIndex}
+  AgentCoreRoleArn:
+    Value: !GetAtt AgentCoreExecutionRole.Arn
+    Export: {Name: !Sub ${ProjectName}-AgentCoreRoleArn}
+  AgentLogGroupName:
+    Value: !Ref AgentLogGroup
+    Export: {Name: !Sub ${ProjectName}-AgentLogGroup}

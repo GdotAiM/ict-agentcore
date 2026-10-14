@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Environment & secrets (never un-ignore .env)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials
+.aws/
+
+# Runtime artifacts
+out/
+build/
+*.log
+logs/
+payload.json
+response.json
+
+# AgentCore CLI / CDK
+agentcore/.cli/
+agentcore/.cache/
+agentcore/agentcore.json
+agentcore/cdk/node_modules/
+agentcore/cdk/cdk.out/
+node_modules/
+cdk.out/
+
+# KB downloads (transcripts are fetched on demand, never committed)
+kb/transcripts/*
+!kb/transcripts/README.md
+kb/rules/
+kb/backtests/
+
+# Frontend generated config / test creds
+frontend/config.js
+frontend/.cognito-test-user
+.cognito-test-user*
+.DS_Store

@@ -1,0 +1,7 @@
+{
+  "_comment": "High-impact events. time is local to tz (default America/New_York). Replace/extend from your calendar feed (scripts/update_calendar.py). Entries for 14 Oct 2026 come from reference/findings (CPI 08:30 NY, FOMC minutes 14:00 NY).",
+  "events": [
+    {"name": "US CPI", "currency": "USD", "impact": "high", "date": "2026-10-14", "time": "08:30", "tz": "America/New_York"},
+    {"name": "FOMC Minutes", "currency": "USD", "impact": "high", "date": "2026-10-14", "time": "14:00", "tz": "America/New_York"}
+  ]
+}
