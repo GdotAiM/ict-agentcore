@@ -667,7 +667,7 @@ Charts: charts/pingpong_summary.png, charts/pingpong_example.png, charts/classic
 - **Only mildly positive pocket:** NY AM 07-10 NY (13-16 SAST) with bias at 2R. 30m +0.20R (n=23); 1h +0.14R (n=143), win 34%. Same sign on both timeframes, but below +0.3R.
 - **Times:** 2R targets that hit took a median 60-75 min (30m) or 120 min (1h).
 
-**Verdict: REJECTED** for every configuration. No target or filter reaches +0.3R with n≥30. NY AM with bias is the only lead worth watching (+0.14 to +0.20R), and it is not tradable at Hilda's bar.
+**Verdict: REJECTED** for every configuration. No target or filter reaches +0.3R with n≥30. NY AM with bias is the only lead worth watching (+0.14 to +0.20R), and it is not tradable at the trader's bar.
 
 Script: scripts/vp_poc_backtest.py (charts: scripts/vp_charts.py; tick-volume fetch: scripts/fetch_vol.py). Results: data/vp_results.json. Charts: charts/vp_summary.png, charts/vp_example.png.
 

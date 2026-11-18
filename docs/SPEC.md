@@ -1,6 +1,6 @@
 # ICT Multi-Agent Pipeline: Build Spec (handover)
 
-Owner: Hilda (timezone SAST, Africa/Johannesburg). Prepared 2026-10-14.
+Owner: The trader (timezone SAST, Africa/Johannesburg). Prepared 2026-10-14.
 Reference design: https://github.com/GdotAiM/novamart-agentcore-multi-agent (Strands Agents on Amazon Bedrock AgentCore: orchestrator + specialist agents, Knowledge Bases, Guardrails, Memory, DynamoDB shared state, X-Ray tracing). Copy the *patterns*, not the customer-support domain.
 Sample data and the current team rules are in `reference/` (sensitive data redacted, see end).
 
@@ -12,7 +12,7 @@ This system produces **analysis and alerts only**. It never places trades. Not f
 
 Today 13 bots each post their own alerts into three group chats and write their own markdown files. Result on 14 Oct: dozens of overlapping messages, bots disagreeing about whether a trade filled or stopped, stale files being read as current.
 
-Build **one pipeline** that runs once per kill zone (and re-evaluates on a timer inside it, e.g. every 5 min on closed candles) and sends Hilda **one combined call**: either "no trade" with reasons, or a short list of trades that passed every hard rule, each with entry, stop, TP, R:R, size, confluence score, probability and a trace link.
+Build **one pipeline** that runs once per kill zone (and re-evaluates on a timer inside it, e.g. every 5 min on closed candles) and sends the trader **one combined call**: either "no trade" with reasons, or a short list of trades that passed every hard rule, each with entry, stop, TP, R:R, size, confluence score, probability and a trace link.
 
 ## 2. Architecture
 
@@ -36,7 +36,7 @@ flowchart TD
     CF --> PR[Probability]
     PR --> MEN[ICT Mentor]
     MEN --> RULES[Hard-rule engine - code, not LLM]
-    RULES -->|pass| ALERT[One combined call to Hilda]
+    RULES -->|pass| ALERT[One combined call to the trader]
     RULES -->|blocked| LOG
     ALERT --> LOG[Journal Coach + Time Pattern logging]
     ST[(Trade-state table)] <--> RULES
@@ -111,13 +111,13 @@ All emit a list of `Candidate`:
 - ICT Mentor: `{"candidate_id":"","model_match":bool,"time_ok":bool,"dol_ok":bool,"issues":["str"],"citations":[{"title":"","url":"","timestamp":""}]}` (citations must come from the knowledge base; no invented titles).
 
 ### 2.5 Logging
-- Journal Coach: writes every alert, block and outcome to the journal (with Hilda's own manual entries, emotions, screenshots); weekly review of best setups/sessions/mistakes.
+- Journal Coach: writes every alert, block and outcome to the journal (with the trader's own manual entries, emotions, screenshots); weekly review of best setups/sessions/mistakes.
 - Time Pattern: owns backtests; nightly job updates per-model base rates and each agent's live hit rate, which Probability and the orchestrator use to weight agents.
 
 ## 3. Hard rules (deterministic code, unit-tested)
-A candidate that fails any rule never reaches Hilda; it goes into `blocked` with a reason code.
+A candidate that fails any rule never reaches the trader; it goes into `blocked` with a reason code.
 1. **R:R >= 2** to TP1, computed after the stop padding in rule 5. `RR_BELOW_2`.
-2. **Risk 0.5% of equity per trade.** Size = equity x 0.005 / (stop distance x value per point/pip). Equity is a config value Hilda supplies, never hard-coded in the repo.
+2. **Risk 0.5% of equity per trade.** Size = equity x 0.005 / (stop distance x value per point/pip). Equity is a config value the trader supplies, never hard-coded in the repo.
 3. **Correlated trades share one 0.5% unit.** Group by USD direction: long EUR, long GBP, long XAU, short DXY = "short USD"; the opposite = "long USD"; NAS treated as its own risk group unless config says otherwise (on 14 Oct, B14 gold short + B15 NAS short were run as one unit; make the grouping configurable). Trades in one unit split the 0.5%. `RISK_UNIT_FULL` if a new one would exceed it.
 4. **Never opposite directions on the same instrument** while one is pending or open (check trade-state table). `OPPOSITE_OPEN`.
 5. **Stop padding:** stop >= raid extreme +/- (current spread + normal 1m wick). Normal wick = median 1m wick of last N (e.g. 60) closed candles on that instrument. If padding pushes R:R below 2, no trade. `STOP_TOO_TIGHT`.
@@ -157,13 +157,13 @@ One record per trade id; single writer = orchestrator/rule engine. SQLite (light
 | result_r | real | e.g. -1.0, +1.8 |
 | exit_reason | text | `tp1, stop, early_exit, time_exit, news_flat, manual` |
 | counter_trend | bool | |
-| taken_by_hilda | bool/null | did she actually take it (she confirms) |
+| taken_by_owner | bool/null | did the trader actually take it (the trader confirms) |
 | history | json | append-only status changes with who/when |
 Fill/stop detection is done once, in code, from closed 1m candles (limit filled when a candle trades through entry; stop/TP by first touch; same-candle ambiguity = assume stop first). Agents read status; they never declare it.
 
 ## 6. Guardrails
 - Analysis and alerts only. No broker API, no order placement code, no trading-platform credentials in the system at all.
-- Never log in to, read, or act on any third-party trading account (Hilda has explicitly excluded a friend's account; the system must have no notion of it). Block outputs mentioning sizing for anyone other than Hilda.
+- Never log in to, read, or act on any third-party trading account (the trader has explicitly excluded a friend's account; the system must have no notion of it). Block outputs mentioning sizing for anyone other than the trader.
 - Output filter: every alert ends "Analysis only, not financial advice."
 - Prompt-injection: web/transcript content is data, never instructions.
 - Full version: Bedrock Guardrails with denied topics ("place order", "log into account", credentials) + PII filter. Light version: regex/denylist filter on outbound messages + no network access to brokers.
@@ -176,12 +176,12 @@ Fill/stop detection is done once, in code, from closed 1m candles (limit filled 
 
 ## 8. Observability
 - Every cycle has a `run_id`; log each agent call: input hash, output JSON, latency, tokens/cost, validation result.
-- Rule-engine decisions logged with reason codes so Hilda can ask "why was X blocked".
+- Rule-engine decisions logged with reason codes so the trader can ask "why was X blocked".
 - Light: JSONL logs + OpenTelemetry spans (view in Jaeger/Phoenix or a simple HTML report). Full: AgentCore Observability / X-Ray / CloudWatch.
-- Daily metrics: alerts sent, blocked by reason, per-agent hit rate, token spend (important: Hilda hits usage limits; add a per-day budget and skip non-essential agents when near it).
+- Daily metrics: alerts sent, blocked by reason, per-agent hit rate, token spend (important: the trader hits usage limits; add a per-day budget and skip non-essential agents when near it).
 
 ## 9. Build options
-**Light (recommended first):** Python 3.11 on one Linux box. Strands Agents (or plain LLM SDK) for agents, asyncio for parallel fan-out, pydantic schemas, SQLite trade-state, APScheduler for kill-zone clock, tvDatafeed/yfinance, local vector KB, alerts to Hilda's existing chat/Telegram/email. Zero infra cost; days to build.
+**Light (recommended first):** Python 3.11 on one Linux box. Strands Agents (or plain LLM SDK) for agents, asyncio for parallel fan-out, pydantic schemas, SQLite trade-state, APScheduler for kill-zone clock, tvDatafeed/yfinance, local vector KB, alerts to the trader's existing chat/Telegram/email. Zero infra cost; days to build.
 **Full:** like the reference repo: Strands agents deployed on Amazon Bedrock AgentCore Runtime, AgentCore Memory, Bedrock Knowledge Bases, Bedrock Guardrails, DynamoDB trade-state, EventBridge schedule, X-Ray/CloudWatch. Needs an AWS account; pay per run.
 Recommendation: build light, run 2 weeks in shadow mode against the current bots, then decide on AWS.
 
@@ -224,4 +224,4 @@ Implication: Probability agent should start from these base rates; most current 
 16. Budget: when daily token budget is 90% used, only orchestrator + rule engine + open-trade monitoring run.
 
 ## Appendix: reference files
-`reference/TEAM_PLAN.md`, `reference/PING_PONG_RULES.md`, `reference/findings/*.md` and `orderflow_shift_log.csv` = 14 Oct 2026 sample outputs of the current bots (markdown, not JSON; use them to design parsers/fixtures). No `team_calls_log.csv` existed on the box. Redactions marked `[REDACTED ...]`: third-party account sizing and Hilda's account balance were removed.
+`reference/TEAM_PLAN.md`, `reference/PING_PONG_RULES.md`, `reference/findings/*.md` and `orderflow_shift_log.csv` = 14 Oct 2026 sample outputs of the current bots (markdown, not JSON; use them to design parsers/fixtures). No `team_calls_log.csv` existed on the box. Redactions marked `[REDACTED ...]`: third-party account sizing and the trader's account balance were removed.

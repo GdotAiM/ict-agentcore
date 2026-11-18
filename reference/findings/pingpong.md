@@ -57,7 +57,7 @@ Daily bias (findings/bias.md 15:05 OVERRUN; 15:15 15m now closed): **NAS CT long
   - GU: no new alertable setup (prior long stopped). Fresh 15m swing-low sweeps 09:00/09:10 watching for MSS.
   - DXY: confluence only, no setup.
 - 09:37 SAST (London Open), closed candles to 09:35 (last bar open 09:30), fetched 09:36 via TradingView. Per-sweep detail from scripts/pp_live_detail.py (engine rules, no busy filter).
-  - EU: the 09:30 alerted OTE short (1.12090 / stop 1.12124 / target 1.12022) is VOID. Its target 1.12022 traded at 09:10 (bar low 1.12002; London low 1.12000 at 09:15) before the entry filled (high since MSS 1.12082). The previous pass missed this. Opposite pool swept, so per rule 3 the next look is a long; 09:10 sweep of 15m swing low 1.12022 has no MSS yet. Correction sent to Hilda; no new alert.
+  - EU: the 09:30 alerted OTE short (1.12090 / stop 1.12124 / target 1.12022) is VOID. Its target 1.12022 traded at 09:10 (bar low 1.12002; London low 1.12000 at 09:15) before the entry filled (high since MSS 1.12082). The previous pass missed this. Opposite pool swept, so per rule 3 the next look is a long; 09:10 sweep of 15m swing low 1.12022 has no MSS yet. Correction sent to the trader; no new alert.
   - NAS: Unicorn/OB long 30574.6 still unfilled (low since MSS 30585.5; 09:30 bar low 30594.5). Last bar of fill window is 09:35 (window ends ~09:40); the separate 09:41 recheck routine handles it. No re-alert.
   - XAU: Asia low 4144.455 swept again; new extreme 4143.255 (09:30 bar). No MSS yet. Watching.
   - GU: 09:00/09:10 swing-low sweeps (extreme 1.32573), no MSS yet. Earlier long stopped. Nothing alertable.

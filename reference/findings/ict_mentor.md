@@ -10,7 +10,7 @@ ICT Mentor Bot. Analysis only. No prices invented. Prior version archived at dat
 
 ## Outcomes
 - S21 XAUUSD long, COUNTER-TREND: closed flat for CPI at 14:25 at 4150.915, about +2.59R (G2-1, the same unit, +2.49R). TP1 4157.9 never traded. CPI then took gold to 4085.29, so holding it through the news would have meant a full stop. Correct process: flat before high-impact news.
-- B6 GBPUSD long: TEAM DISAGREEMENT. Scalp Bot, Probability Bot and the earlier setups.md say it was closed flat at 14:25 (1.32684, about +1.47R). setups.md 14:51 now says stopped out at 14:30 (-1R, the CPI candle low 1.32268 went through the 1.32563 stop). The answer depends on whether Hilda actually closed before CPI. Her log decides. Lesson either way: being flat by 14:25 was the rule, and a 4.9-pip stop cannot survive a CPI candle.
+- B6 GBPUSD long: TEAM DISAGREEMENT. Scalp Bot, Probability Bot and the earlier setups.md say it was closed flat at 14:25 (1.32684, about +1.47R). setups.md 14:51 now says stopped out at 14:30 (-1R, the CPI candle low 1.32268 went through the 1.32563 stop). The answer depends on whether the trader actually closed before CPI. The trader's log decides. Lesson either way: being flat by 14:25 was the rule, and a 4.9-pip stop cannot survive a CPI candle.
 - S24 NAS100 long, COUNTER-TREND: MISSED (buy limit 30583.8, low after posting 30589.0; price ran through TP1 30622 without a fill), and the 14:15 CPI cancel applied anyway. 0R. ICT lesson: don't chase a missed entry; if price leaves the FVG without filling you, the trade is gone (ICT 2022 Mentorship: enter on the retrace into the FVG, not on the run).
 - Ping-Pong OTE longs, VOID: GU 13:51 (limit 1.32603; target 1.32694 hit at 14:00 before the fill) and NAS 14:01 (limit 30544.9; target 30617.5 hit at 14:05 before the fill). Corrections were sent at 14:11. ICT lesson: if the draw on liquidity is delivered before your entry, the setup is spent. Entering afterwards means trading the leftovers with no target. The deep 0.618-0.786 OTE often doesn't come in a strong leg; ICT's FVG and consequent encroachment (CE) entries are shallower.
 - Held post-CPI Ping-Pong shorts (NAS, GU): VOID, target before fill, never alerted.
@@ -62,7 +62,7 @@ London Open review kept below (archived top copy: data/ict_mentor_prev_20261014_
 - USD-bid / cautious NAS while DXY holds above 102.207. Gold/DXY inverse restored (morning divergence gone). NAS weak vs SPX (bearish SMT at highs). Main counter-signal: GU refusing to confirm DXY highs = DXY-vs-GU SMT, early warning the dollar push could be a London/pre-NY Judas that NY reverses. Flip: DXY back under 102.207 with EU reclaiming 1.11982.
 - US CPI 14:30 SAST — be flat into the print (team rule / confluence / probability all flag it).
 
-## Live ideas vs ICT and Hilda's rules
+## Live ideas vs ICT and the trader's rules
 1. **B6 GBPUSD LONG = Ping-Pong GU IFVG long (ONE soft-dollar 0.5% unit).** setups.md CE 1.32612 / stop 1.32563 / TP1 1.32728 (2.4R); Ping-Pong entry 1.32598 / stop 1.32558 / TP 1.32728 (3.25R). Still OPEN (low since fill 1.32583; high 1.32694; stops and TP1 untouched). Live ~1.32608–1.32610 ≈ flat to +0.2R on B6.
    - ICT: London sell-side sweep (1.32568), MSS 10:15, FVG/IFVG entry — model was valid at the time. Stop beyond the raid extreme (1.32558/63 under 1.32568): OK — not in front of the pool.
    - Context now: DXY 1H closes above 102.22 flipped the soft-dollar support. Bias.md still BULL GU above 1.3248; intermarket SMT (GU hold vs DXY highs) is the Judas warning, not a free add. Soft-dollar losses earlier today (B3/B5/PP EUR/S18/B7/PP XAU) are already closed — this unit is fresh 0.5% while open alone. Correlated-risk rule: do not stack another soft-dollar long on top.
@@ -78,7 +78,7 @@ London Open review kept below (archived top copy: data/ict_mentor_prev_20261014_
    - Verdict: **NOT VALID live** (cancelled). Missed; do not chase the spent FVG from here.
 
 5. **Ping-Pong XAU LONG, COUNTER-TREND.** Filled 10:35; **STOPPED 10:51, −1R** (low 4142.545 vs stop 4142.755).
-   - Verdict: **NOT VALID live** (stopped). Was correctly labelled COUNTER-TREND; loss stands. No rule against trading again after a loss in the same KZ (Hilda 14 Oct) — but need a *fresh* MSS, not a re-entry into the same failed array.
+   - Verdict: **NOT VALID live** (stopped). Was correctly labelled COUNTER-TREND; loss stands. No rule against trading again after a loss in the same KZ (the trader 14 Oct) — but need a *fresh* MSS, not a re-entry into the same failed array.
 
 6. **Scalps / Gold 2.0.** Nothing open (S18 stopped −1R, S19 invalidated ~−0.15R). Gold 2.0 window 13:00-15:00 just open; **no idea printed yet**. Prior mentor note still stands: "Gold 2.0" is not an official ICT-named model; the parts (time anchor → sweep → MSS → FVG) are Ep. 6. Wait for the print.
 
@@ -93,7 +93,7 @@ London Open review kept below (archived top copy: data/ict_mentor_prev_20261014_
 ## Ping-Pong Bot note
 - File still 11:01 (London last slot); detail_1302.txt shows post-London engine noise (XAU counter longs already −1R; GU short OTE/OB unfilled at 12:55). NY 13:01 scan was due — treat pingpong.md as lagging until refreshed. Backtest n=21 still unproven.
 
-## Teaching point for Hilda
+## Teaching point for the trader
 NY AM delivers after a Judas of Asia/London — it does not mean "sell whatever is already down." The NAS/gold sell-side draws are real, but without a *fresh* raid of buy-side, displacement that closes an MSS, and an FVG/OTE entry with the stop *beyond* the raid, you do not have the model (ICT 2022 Mentorship Ep. 6: https://www.youtube.com/watch?v=Bkt8B3kLATQ). Spent London displacement is not a new entry. The open GU long is the soft-dollar leftover fighting the confirmed dollar flip; the GU-vs-DXY SMT is the warning that this USD push can still reverse — manage that one, don't add soft-dollar, and be flat into CPI 14:30.
 
 ---
@@ -132,7 +132,7 @@ ICT Mentor Bot. Analysis only, no trades placed. No prices invented. Supersedes 
 - Gold weak while DXY soft = divergence; gold's move is not dollar-driven.
 - Since 09:15 DXY poked 102.176 (above London high 102.157, below Asia high 102.207) and fell back to 102.126: no dollar breakout.
 
-## Live ideas vs ICT and Hilda's rules
+## Live ideas vs ICT and the trader's rules
 1. NAS100 long, COUNTER-TREND. Same trade from Confluence Idea A (limit 30576, stop 30517, TP 30704 = 2.17R) and Ping-Pong alert (Unicorn limit 30574.6, stop 30517.6, TP 30704.7 = 2.28R). Count as ONE 0.5% unit; do not take both.
    - ICT: Judas sweep of Asia low, MSS, FVG/Unicorn entry, plus NAS/SPX bullish SMT. Valid structure. Stop beyond the 30519.6 raid low: OK.
    - Risks: 1H bear FVG 30617.7-30673 between entry and target; 4H bear in control; TP must stay at/below 30704 (4H bear FVG 30721-30818 above). Not filled (low since MSS 30585.5; last 30608.4). Ping-Pong fill window ends 09:40 SAST; Confluence cancel 11:00.
@@ -153,17 +153,17 @@ ICT Mentor Bot. Analysis only, no trades placed. No prices invented. Supersedes 
 ## Ping-Pong Bot (new, PING_PONG_RULES.md)
 - Backtest of the missed days 8-14 Oct: n=21, +0.42R average. Ping-Pong +0.68R (n=17), Classic -0.69R (n=4). The OB result comes from 4 wins, and Classic/Ping-Pong double-count two entries. With n this small it is unproven. Note 13/21 trades were in the Asian kill zone.
 
-## Teaching point for Hilda
-A stop belongs past the pool, not in front of it. B2's raid high (1.32728) is a smaller high under the real buy-side (the 1.32750 Asia high). In ICT's Judas swing, London often runs the obvious session high before turning, so a stop tucked just under it is liquidity itself. Widen the stop, and if the RR then fails 1:2, that is the market telling you the trade isn't there. Source: ICT 2022 Mentorship (YouTube), on buy-side liquidity and the London Judas swing; plus the NFP Oct 2026 lecture's "isolated levels are useless" (https://www.youtube.com/watch?v=59Elm8myGEc). Same lesson as Hilda's 7 Oct gold stop at 4101.80 under 4103.5.
+## Teaching point for the trader
+A stop belongs past the pool, not in front of it. B2's raid high (1.32728) is a smaller high under the real buy-side (the 1.32750 Asia high). In ICT's Judas swing, London often runs the obvious session high before turning, so a stop tucked just under it is liquidity itself. Widen the stop, and if the RR then fails 1:2, that is the market telling you the trade isn't there. Source: ICT 2022 Mentorship (YouTube), on buy-side liquidity and the London Judas swing; plus the NFP Oct 2026 lecture's "isolated levels are useless" (https://www.youtube.com/watch?v=59Elm8myGEc). Same lesson as the trader's 7 Oct gold stop at 4101.80 under 4103.5.
 
 ---
 
 # OLD (7 Oct 2026): everything below is from 7 Oct and is out of date. Do not trade from these levels.
 
-# ICT Mentor Review: Hilda's 3 trade ideas
+# ICT Mentor Review: The trader's 3 trade ideas
 Updated: 2026-10-07 16:15 SAST (Silver Bullet / London Close review appended)
 
-Context used: /workspace/ict-team/findings/bias.md (10:56 SAST) and intermarket.md (10:46 SAST). Both are from today and fresh. Hilda's levels come from her own notes. No live prices were fetched or made up here. Rules applied: 0.5% risk per trade, minimum 1:2 RR, daily-chart bias, DXY as confluence. NY AM kill zone is 13:00-16:00 SAST (until 1 Nov 2026; corrected 16:15, the earlier 13:00-15:00 was wrong). Analysis only, not trade advice.
+Context used: /workspace/ict-team/findings/bias.md (10:56 SAST) and intermarket.md (10:46 SAST). Both are from today and fresh. The trader's levels come from the trader's own notes. No live prices were fetched or made up here. Rules applied: 0.5% risk per trade, minimum 1:2 RR, daily-chart bias, DXY as confluence. NY AM kill zone is 13:00-16:00 SAST (until 1 Nov 2026; corrected 16:15, the earlier 13:00-15:00 was wrong). Analysis only, not trade advice.
 
 ## 1) Gold continuation short: 15m close 4123.83 (below 4125), drawing on OANDA PDL 4103.52
 **Where it matches ICT**
@@ -243,7 +243,7 @@ Windows: Silver Bullet 16:00-17:00 SAST (10:00-11:00 NY), London Close 16:00-18:
 
 ### Rules and risk
 - **One USD-long unit:** EUR short + gold short + GBP runner (+ NAS short as risk-off) all lose together if DXY closes a 15m under 102.330. Total open risk on this theme should be 0.5%, not 0.5% each.
-- **Day count:** stopped ideas today across the team are A3, A4/S12, A5, R2, S9, S11, S13 (about -6R if every one was taken). ICT teaches one or two A+ setups per session and stopping after a loss in a kill zone. If Hilda took several of these, the day's drawdown could already be around 3%. The Silver Bullet is the one textbook setup of the afternoon; there's no need to force anything after it.
+- **Day count:** stopped ideas today across the team are A3, A4/S12, A5, R2, S9, S11, S13 (about -6R if every one was taken). ICT teaches one or two A+ setups per session and stopping after a loss in a kill zone. If the trader took several of these, the day's drawdown could already be around 3%. The Silver Bullet is the one textbook setup of the afternoon; there's no need to force anything after it.
 - **Event risk:** EIA 16:30 SAST (gold-sensitive), FOMC minutes 20:00 SAST. Be flat or at break-even on gold before 16:30.
 - **Correction:** my earlier sections said NY AM was 13:00-15:00 SAST; it's 13:00-16:00. Header fixed.
 
