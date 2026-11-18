@@ -187,7 +187,7 @@ Data: TradingView OANDA:NAS100USD, OANDA:XAUUSD, OANDA:EURUSD, OANDA:GBPUSD and 
 - **DXY:** New highs **102.841 @15:03** / last **102.834** (above prior NY AM 102.721). Bull continuation; no bearish MSS under 102.641. Supports USD-bid shorts on FX/XAU, not a Scalp instrument alone.
 
 ### Disagreements / flags
-- **setups.md B14 XAU SHORT (filled CE 4105.34) vs Scalp S26 XAU LONG: DIRECT DISAGREEMENT resolved on the book — both now closed on Scalp side.** S26 stopped −1R @15:04. B14 (Entry Model) still open per setups.md 15:00 (was ~+0.8R to 1.0R at 14:59); with XAU now 4084.47 it is further in profit toward TP1 4075 / TP2 4066.53. B14 array-failure (1m close >4107.88) never triggered (max close 4107.25, max H 4107.69). Flag for Hilda: opposite calls on the same bounce; Scalp long lost, Entry short working.
+- **setups.md B14 XAU SHORT (filled CE 4105.34) vs Scalp S26 XAU LONG: DIRECT DISAGREEMENT resolved on the book — both now closed on Scalp side.** S26 stopped −1R @15:04. B14 (Entry Model) still open per setups.md 15:00 (was ~+0.8R to 1.0R at 14:59); with XAU now 4084.47 it is further in profit toward TP1 4075 / TP2 4066.53. B14 array-failure (1m close >4107.88) never triggered (max close 4107.25, max H 4107.69). Flag for the trader: opposite calls on the same bounce; Scalp long lost, Entry short working.
 - **setups.md B15 NAS SHORT (alerted 15:00, sell limit CE 30407.25) vs dead S25 long:** S25 already −1R. B15 is the continuation short Scalp would have watched after the 30369.8 break — **not re-alerted** (already reported by Entry Model). Aligns with liquidity.md 15m/5m bear flow; disagrees with bias.md 14:51 "SWEEP, likely reversal" long (that read is soft after 15m 14:45 close AT 30369.8 and fresh lows).
 - bias.md NAS invalidation was "15m close below 30369.8" — 14:45 15m closed **exactly 30369.8**, not below; 15:00 15m still open. XAU bias BEAR toward 4066.53 agrees with B14 path post-S26 stop.
 - liquidity.md (14:57) 1m NAS flow bull (MSS 14:49) and XAU 1m bear are both stale vs the 14:58-15:04 extension lower.
@@ -220,7 +220,7 @@ Data: TradingView OANDA:XAUUSD 1m via tvDatafeed (nologin), fetched 14:54-14:55 
 - No fourth high-side instance: no fresh buy-side raid above 4155.835.
 - Lot sizing: account size still not confirmed in memory or findings (unconfirmed [REDACTED balance] only in pingpong notes). Formula: USD per 1.0 lot = stop distance × 100; lots = (0.005 × balance) / (stop distance × 100).
 - Peer files: liquidity.md 14:47 (fresh), timeframes.md 14:37 (today's but pre-bounce / CPI-low stale), setups.md 14:51 (fresh). None missing or older than today.
-- Conflicts / flags: (1) **setups.md B14 XAU SHORT** filled CE 4105.34 at 14:49; Entry Model TRIGGER ALERT 14:51. Array-failure rule is a 1m close above FVG top 4107.88 — OANDA 14:51 H 4107.690 and 14:54 H 4107.535 both under it; closes 4105.740 / 4107.250 stayed inside, so B14 still live. It runs against Scalp Bot's S26 XAU LONG (alerted 14:53 off the same 4085.29 raid) — **DIRECT DISAGREEMENT**, same as the 14:50/14:53 notes; flag for Hilda / Entry Model. (2) liquidity.md (14:47) 1m flow bear (BOS 14:34) is out of date vs the 14:49 bullish shift; its TOP2 4085.29 is the day low itself (resting). Secondary 5m VI 4109.9 is the next level above (~2.7 USD over last). (3) timeframes.md (14:37) still lists CPI low 4112.4 (now 4085.29) and D/4H bear; a long stays COUNTER-TREND until 15m >4170.5 or 1H >4156. Window closes 15:00; the 14:56 run should record final expiry of the paper short if TP/stop are untouched.
+- Conflicts / flags: (1) **setups.md B14 XAU SHORT** filled CE 4105.34 at 14:49; Entry Model TRIGGER ALERT 14:51. Array-failure rule is a 1m close above FVG top 4107.88 — OANDA 14:51 H 4107.690 and 14:54 H 4107.535 both under it; closes 4105.740 / 4107.250 stayed inside, so B14 still live. It runs against Scalp Bot's S26 XAU LONG (alerted 14:53 off the same 4085.29 raid) — **DIRECT DISAGREEMENT**, same as the 14:50/14:53 notes; flag for the trader / Entry Model. (2) liquidity.md (14:47) 1m flow bear (BOS 14:34) is out of date vs the 14:49 bullish shift; its TOP2 4085.29 is the day low itself (resting). Secondary 5m VI 4109.9 is the next level above (~2.7 USD over last). (3) timeframes.md (14:37) still lists CPI low 4112.4 (now 4085.29) and D/4H bear; a long stays COUNTER-TREND until 15m >4170.5 or 1H >4156. Window closes 15:00; the 14:56 run should record final expiry of the paper short if TP/stop are untouched.
 
 ---
 Updated: 2026-10-14 14:53 SAST
@@ -263,7 +263,7 @@ Data: TradingView OANDA:NAS100USD, OANDA:XAUUSD, OANDA:EURUSD, OANDA:GBPUSD and 
 - Continuation shorts: no pullback into the CPI bear FVGs with rejection yet; market shorts still fail 1:2 with the stop rule.
 
 ### Disagreements / flags
-- **setups.md B14 XAUUSD SHORT (alerted 14:49, sell limit CE 4105.34, stop 4117.60) vs S26 XAU LONG: DIRECT DISAGREEMENT.** OANDA 14:49 H 4105.600 traded B14's CE, so B14 looks filled. Its array-failure rule (1m close above 4107.88) has not triggered: 14:50 H 4106.305 C 4105.915, 14:51 forming H 4106.48. Scalp Bot reads the 14:49 close above 4102.795 as a bullish 1m MSS after a sweep-and-reclaim of 4098.79; Entry Model reads 14:41's FVG as the short entry after the 4115.66 raid. Both can't be right; flag for Hilda / Entry Model.
+- **setups.md B14 XAUUSD SHORT (alerted 14:49, sell limit CE 4105.34, stop 4117.60) vs S26 XAU LONG: DIRECT DISAGREEMENT.** OANDA 14:49 H 4105.600 traded B14's CE, so B14 looks filled. Its array-failure rule (1m close above 4107.88) has not triggered: 14:50 H 4106.305 C 4105.915, 14:51 forming H 4106.48. Scalp Bot reads the 14:49 close above 4102.795 as a bullish 1m MSS after a sweep-and-reclaim of 4098.79; Entry Model reads 14:41's FVG as the short entry after the 4115.66 raid. Both can't be right; flag for the trader / Entry Model.
 - **B6 GBPUSD outcome (unchanged):** Scalp paper closed flat +1.47R @14:25 vs setups.md stopped -1R @14:30.
 - liquidity.md (14:47): 1m flow tagged bear for NAS (MSS 14:30) and XAU (BOS 14:34); both now show bullish 1m shifts at 14:49. Its XAU 4098.8 sweep is logged "continuation", but price has since reclaimed it.
 - bias.md (13:01) / intermarket.md (12:59) are pre-CPI; not used for direction.
@@ -294,7 +294,7 @@ Data: TradingView OANDA:NAS100USD, OANDA:XAUUSD, OANDA:EURUSD, OANDA:GBPUSD and 
 
 ### Outcome update
 - **S20 XAU short −1R; S22 NAS short −1R; S21/G2-1 XAU long flat for CPI ~+2.59R/+2.49R; S23 VOID; S24 MISSED** — final; not re-alerted.
-- **setups.md B6 GBPUSD LONG — DISAGREE on outcome tracking (unchanged):** Scalp Bot paper **CLOSED FLAT FOR CPI at 14:25 (~+1.47R)** vs setups.md **STOPPED OUT at 14:30 (−1R)** on CPI (L 1.32268 through stop 1.32563; best 1.32716 @14:29 ≈ +2.12R). Flag for Hilda / Entry Model. Not a Scalp Bot open idea.
+- **setups.md B6 GBPUSD LONG — DISAGREE on outcome tracking (unchanged):** Scalp Bot paper **CLOSED FLAT FOR CPI at 14:25 (~+1.47R)** vs setups.md **STOPPED OUT at 14:30 (−1R)** on CPI (L 1.32268 through stop 1.32563; best 1.32716 @14:29 ≈ +2.12R). Flag for the trader / Entry Model. Not a Scalp Bot open idea.
 
 ### Post-CPI path (OANDA 1m, verified)
 - **DXY:** NY AM H **102.721 @14:43** (took PDH 102.574 and week high 102.607); soft to **102.678**. No rejection MSS under a lower high.
@@ -345,7 +345,7 @@ Data: TradingView OANDA:NAS100USD, OANDA:XAUUSD, OANDA:EURUSD, OANDA:GBPUSD and 
 ### Outcome update
 - **S21 XAUUSD LONG COUNTER-TREND: CLOSED FLAT FOR CPI** (final ~+2.59R from 14:26) — unchanged; not re-opened. CPI took gold to **4107.88 @14:39** (would have been a full stop if left open).
 - **S22 NAS short −1R, S23 VOID, S24 MISSED** — final; not re-alerted.
-- **setups.md B6 GBPUSD LONG — DISAGREE on outcome tracking:** this file marked B6 **CLOSED FLAT FOR CPI at 14:25 (~+1.47R)** under the flat-by-14:25 rule. setups.md (14:37) kept it open and reports **STOPPED OUT at 14:30 (−1R)** on the CPI candle (L 1.32268 through stop 1.32563; best 1.32716 @14:29 ≈ +2.12R). Flag for Hilda / Entry Model: Scalp Bot’s paper flat vs Entry Model’s live stop. Not a Scalp Bot open idea either way.
+- **setups.md B6 GBPUSD LONG — DISAGREE on outcome tracking:** this file marked B6 **CLOSED FLAT FOR CPI at 14:25 (~+1.47R)** under the flat-by-14:25 rule. setups.md (14:37) kept it open and reports **STOPPED OUT at 14:30 (−1R)** on the CPI candle (L 1.32268 through stop 1.32563; best 1.32716 @14:29 ≈ +2.12R). Flag for the trader / Entry Model: Scalp Bot’s paper flat vs Entry Model’s live stop. Not a Scalp Bot open idea either way.
 
 ### Post-CPI path (OANDA 1m)
 - **DXY:** 14:29 L **102.195** → 14:30 H **102.496** → continued to **102.704 @14:37** (took PDH 102.574 and week high 102.607). Soft pullback to 102.657. No rejection MSS yet.
@@ -556,7 +556,7 @@ Data: TradingView OANDA:NAS100USD, OANDA:XAUUSD, OANDA:EURUSD, OANDA:GBPUSD and 
 - **Stop:** **30566.6** (14:00 structural HL 30571.6 − ~2pt spread − ~3pt normal 1m wick). Risk **17.2**. Team stop rule satisfied; R:R holds above 1:2.
 - **Targets:** TP1 **30622** (5m VI / secondary, **2.22R**) / TP2 **30675** (ranked TOP3, **5.30R**) / TP3 **30704.7** (ranked TOP1, **7.03R**). Min 1:2 met at TP1.
 - **Label: COUNTER-TREND** vs 4H/15m bear and intermarket.md NAS-weak SMT vs SPX. bias.md context: CT long preferred only after 15m close >30677 — we do not have that; scalp model still allows ranked-level continuation either way.
-- **Note:** Prior alerted NAS short in this KZ (**S22 / B11**) lost **-1R**. Hilda allows a follow-on at full 0.5%. Soft-dollar: not the same unit as B6 (FX) or S21 (gold); separate 0.5%.
+- **Note:** Prior alerted NAS short in this KZ (**S22 / B11**) lost **-1R**. The trader allows a follow-on at full 0.5%. Soft-dollar: not the same unit as B6 (FX) or S21 (gold); separate 0.5%.
 - **CPI:** cancel unfilled after 14:15; flat by 14:25 if filled.
 - **Invalidation:** stop 30566.6, or 1m close back under 30571.6 without having filled, or FVG closed through on the fill bar (same-bar cancel).
 
@@ -888,7 +888,7 @@ Data: TradingView OANDA:XAUUSD 1m via tvDatafeed (nologin), fetched 13:24:05 SAS
 - Entry (backtest rule, proximal edge): **4140.935**, filled 13:20. Variant at CE **4139.94** (= S21's limit) not filled yet; lowest since is 4140.050.
 - Stop: **4135.525** (sweep extreme 4136.025 minus 0.50, backtest rule). Risk 5.41 USD from the edge (4.415 from CE).
 - Targets: other side of the 13:00 candle 4142.115 is only 0.2R (already printed 13:17-13:19, before the retrace), and secondary 4145.8 is 0.9R, so neither qualifies. R:R target **4157.9** (liquidity.md secondary 15m Old high BSL) = **1:3.1** from the edge (1:3.8 from CE). Nearest ranked level above, TOP3 **4175**, = 1:6.3 (1:7.7 from CE) as a runner.
-- Lot sizing for 0.5% risk: 5.41 USD x 100 oz = **541 USD per 1.0 lot** from the edge (441.5 USD per lot from CE). Account size is not in memory or any findings file, so lots = (0.005 x balance) / 541 (edge) or / 441.5 (CE); her balance is needed.
+- Lot sizing for 0.5% risk: 5.41 USD x 100 oz = **541 USD per 1.0 lot** from the edge (441.5 USD per lot from CE). Account size is not in memory or any findings file, so lots = (0.005 x balance) / 541 (edge) or / 441.5 (CE); the trader's balance is needed.
 - Status 13:24: price 4140.435, inside the FVG, about -0.09R on the edge fill. Stop and targets untouched. Highs since the retrace: 4142.150 (13:22).
 - Management: US CPI 14:30 SAST. Be flat by 14:25; no new fill after 14:15 (expire the CE variant then). Invalid on a 1m close below 4136.025.
 - Conflicts: (1) liquidity.md (13:13) ranks XAU bearish and lists TOP1 below 4136.02 as untouched, but that's the 13:06 sweep print itself. (2) timeframes.md (13:14) calls this long COUNTER-TREND against M/W/D/4H/1H bear; it only becomes trend-aligned on a 15m close above 4170.5 or a 1H close above 4156, and the 15m bear FVG 4145.9-4149.8 sits between entry and 4157.9. (3) Duplicate of S21 (NY AM check, alerted 13:19): treat as one position.
@@ -1935,7 +1935,7 @@ Data: TradingView OANDA 1m/5m/15m bars (OANDA:NAS100USD, OANDA:XAUUSD, OANDA:EUR
 - Cancel if: unfilled by 18:00 SAST (end of London Close), 1.32290 prints before a fill, a 5m close back under 1.3213 before a fill (failed break), or a DXY 5m close back above 102.31.
 - Size at 0.5% risk: units = (0.005 x equity) / 0.00038.
 - Correlation: S17 is a USD-short idea and S16 (NAS short) was posted as a USD-long / risk-off idea. They lean on opposite DXY reads, so they are not one risk unit, but running both means the dollar is being read two ways. EUR broke its own levels the same way (see below); I'm not posting it to avoid doubling the USD-short risk on a weaker break.
-- Note from confluence.md (16:53): it mentions a no-adding rule after two losses in a kill zone. This kill zone has S15 stopped (-1R). Hilda should check that rule against her own trades before taking S17.
+- Note from confluence.md (16:53): it mentions a no-adding rule after two losses in a kill zone. This kill zone has S15 stopped (-1R). The trader should check that rule against the trader's own trades before taking S17.
 
 ### S16 NAS100 short (posted 16:32, filled 16:32 at 31051.0) - OPEN
 - Low since fill 30991.7 (16:53), 5.7 pts short of the 30986.0 target. High since fill 31065.3 (16:41), stop 31073.0 untouched.
@@ -2254,7 +2254,7 @@ Data: TradingView OANDA 1m and 5m bars (OANDA:NAS100USD, OANDA:XAUUSD, OANDA:EUR
 - GBPUSD: no scalp. Low 1.31936 (14:27), above TOP3 1.3194 (that day low) and TOP2 1.319. Back up to 1.32008 (14:35), not reclaimed above the broken PDL 1.32014 and no displacement. Last 1.31992.
 - DXY: failed 3.1 pts under TOP1 102.53 (high 102.499, 14:27) and shifted down: 14:32 broke the 14:25 low 102.465 (bearish 1m MSS), low 102.438 (14:35), last 102.457. Context: supports the NAS bounce and is the USD-reversal risk to any fresh gold/EUR/GBP short.
 - News: nothing high-impact before FOMC minutes at 20:00 SAST; EIA crude (medium) 16:30 SAST.
-- Disagreements / flags: (1) S10 is long against bias.md (14:35) NAS intraday bearish (draw 30890.4, invalidation 15m close above 31066.0) and setups.md's NAS short read (draw 30985/30890.4). Bias is context only under Hilda's scalp model; S10's target 31064.0 sits 2 pts under bias.md's invalidation line. (2) S10 (long to 31064) and S8 (short limit 31070) point opposite ways in the same 31064-31070 zone: if S10 reaches target, S8 may then fill; they don't overlap in time but shouldn't be held together. (3) liquidity.md (14:34) logs 31007 as "pending reclaim (1/3 closes inside)"; on OANDA two 5m closes (14:25 31012.6, 14:30 31027.8) are now back above it. (4) The 14:28 run's S8 note said the low since posting was 30998.7; the 14:28 bar actually printed 30991.6 (still above the 30988.0 target).
+- Disagreements / flags: (1) S10 is long against bias.md (14:35) NAS intraday bearish (draw 30890.4, invalidation 15m close above 31066.0) and setups.md's NAS short read (draw 30985/30890.4). Bias is context only under the trader's scalp model; S10's target 31064.0 sits 2 pts under bias.md's invalidation line. (2) S10 (long to 31064) and S8 (short limit 31070) point opposite ways in the same 31064-31070 zone: if S10 reaches target, S8 may then fill; they don't overlap in time but shouldn't be held together. (3) liquidity.md (14:34) logs 31007 as "pending reclaim (1/3 closes inside)"; on OANDA two 5m closes (14:25 31012.6, 14:30 31027.8) are now back above it. (4) The 14:28 run's S8 note said the low since posting was 30998.7; the 14:28 bar actually printed 30991.6 (still above the 30988.0 target).
 
 Updated: 2026-10-07 14:28 SAST
 

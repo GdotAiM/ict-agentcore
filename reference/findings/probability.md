@@ -2,7 +2,7 @@ Updated: 2026-10-14 15:15 SAST (newest section at the bottom; first section writ
 Probability Bot | London Open KZ, Wed 14 Oct 2026. First run (late; 07:36 routine not yet live).
 Sources: time_patterns.md (backtests), review.md, setups.md, confluence.md, bias.md, timeframes.md, orderflow.md (all dated today). Fresh check: OANDA:NAS100USD 5m via tvDatafeed (nologin), 2026-09-18 to 2026-10-14 09:45 SAST. No prices invented. Small samples are flagged; nothing here is a trade instruction.
 
-## Hilda's own record (review.md)
+## The trader's own record (review.md)
 - n=1 logged trade (7 Oct XAUUSD short, +2.19R). 8-13 Oct not logged. **No personal base rate possible yet**; backfill from broker history.
 
 ## Base rates by instrument / kill zone (time_patterns.md, 1h, ~455 days)
@@ -77,7 +77,7 @@ Sources: setups.md 10:00, confluence.md 10:05, time_patterns.md, bias.md, live O
 
 ## Scored: GBPUSD B2 SHORT, COUNTER-TREND, London Open (setups.md; Charter M12)
 Sell limit 1.32665, stop 1.32748, TP1 1.32538 / TP2 1.32480 / TP3 1.32390. Alerted 09:26, **still unfilled** at 10:05 (last 1.32638, high since 09:44 1.32644). Cancel if 1.32538 prints first, stop trades first, or 11:00 SAST. Flat before CPI 14:30 SAST.
-Geometry: risk 8.3 pips. **TP1 = 1.53R (fails Hilda's 1:2 min)**; TP2 = 2.23R (passes); TP3 = 3.31R. ict_mentor safer stop ~1.32765 → TP2 only 1.85R (fails 1:2) / TP3 2.75R — if using the safer stop, target must be TP3.
+Geometry: risk 8.3 pips. **TP1 = 1.53R (fails the trader's 1:2 min)**; TP2 = 2.23R (passes); TP3 = 3.31R. ict_mentor safer stop ~1.32765 → TP2 only 1.85R (fails 1:2) / TP3 2.75R — if using the safer stop, target must be TP3.
 1. **P(fill by 11:00): ~60-80%.** Live: only ~2.7 pips to the limit, ~10 pips to the cancel. Analog on 18 recent weekdays (OANDA 5m, Sep 14–Oct 7): from a 10:05-like close, +2.7 pips before −10 pips by 11:00 filled **14/18 = 78%**. At the earlier 7.5-pip gap it was only 28% (cancel won). Price has rallied into the limit, so fill is now likely if the order is still working.
 2. **P(TP2 before stop | fill): ~31-36%.** Analog on those 14 fills (manage to 14:30, stop-before-target on same bar): TP2 5, stop 8, timeout 1 = **36% (n=14, small)**. Driftless barrier: 8.3/(8.3+18.5) = **31%**. Break-even at 2.23R = 31%. TP3 analog was 0/14 hits before stop/timeout — do not lean on the runner.
 3. **EV per fill: about 0R to +0.15R** (driftless ~0R; analog 0.36×2.23−0.64 ≈ +0.15R). Per order placed (× ~78% fill): about 0R to +0.12R. **The tested London sweep+MSS+FVG model (this setup's family) is REJECTED at −0.14R / −0.28R.** Counter-trend Ping-Pong bucket was only +0.06R. No demonstrated edge beyond noise.
