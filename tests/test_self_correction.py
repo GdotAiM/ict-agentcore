@@ -2,9 +2,9 @@
 import copy
 
 from conftest import T
-from helpers import default_responses, make_pipeline
+from helpers import default_responses, finder, make_pipeline
 
-from ict_pipeline.agents.base import REPAIR_INSTRUCTION, AgentRunner, MockLLM, validate_envelope
+from ict_pipeline.agents.base import REPAIR_INSTRUCTION, AgentRunner, MockLLM, validate_envelope, validate_finder
 from ict_pipeline.guardrails import FOOTER
 from ict_pipeline.observability import RunLog
 
@@ -111,3 +111,50 @@ def test_pipeline_uses_repaired_output_and_still_sends_one_call(settings, writer
     bias = [r for r in res["log"] if r["kind"] == "agent_call" and r["agent"] == "bias"][0]
     assert bias["valid"] is True and bias["repaired"] is True and bias["attempts"] == 2
     assert len(out.outbox) == 1 and FOOTER in out.outbox[0]
+
+
+def test_stale_as_of_is_not_repaired_even_when_schema_also_fails():
+    """A stale timestamp plus a schema error must still be rejected on the first attempt."""
+    calls = {"n": 0}
+
+    def stale_and_bad(prompt):
+        calls["n"] += 1
+        d = copy.deepcopy(_good_bias()(prompt))
+        d["as_of"] = "2026-10-14T13:30:00+02:00"
+        d["instruments"]["NAS100"]["dealing_range"]["high"] = "31000"
+        return d
+    res = AgentRunner("bias", MockLLM({"bias": stale_and_bad}), lambda x: validate_envelope(x, "bias")).run(PAYLOAD, CYCLE)
+    assert not res.ok and "stale" in res.error and calls["n"] == 1 and res.attempts == 1
+
+
+def test_runner_does_not_invent_missing_prices():
+    """The runner must not fill in a missing price; if the model does not return one, discard."""
+    def _drop_high(d):
+        del d["instruments"]["NAS100"]["dealing_range"]["high"]
+    f, state = _flaky(99, _drop_high)
+    res = AgentRunner("bias", MockLLM({"bias": f}), lambda x: validate_envelope(x, "bias")).run(PAYLOAD, CYCLE)
+    assert not res.ok and res.data is None and state["n"] == 2 and "ValidationError" in res.error
+
+
+_FINDER_CAND = {
+    "candidate_id": "C1", "agent": "entry_model", "model": "FVG", "instrument": "NAS100",
+    "direction": "short", "tf": "15m", "order": "limit",
+    "entry": 30407.25, "stop": 30458.5, "tp1": 30300.0, "raid_extreme": 30450.0,
+    "sweep_level_id": "P1", "mss_time": "2026-10-14T13:58:00+02:00",
+    "rr_tp1": 2.1, "counter_trend": False,
+}
+
+
+def test_repair_applies_to_finder_agents():
+    state = {"n": 0}
+
+    def f(prompt):
+        state["n"] += 1
+        d = finder("entry_model", [copy.deepcopy(_FINDER_CAND)])(prompt)
+        if state["n"] == 1:
+            d["candidates"][0]["entry"] = "30407.25"   # price as string
+        return d
+    res = AgentRunner("entry_model", MockLLM({"entry_model": f}),
+                      lambda x: validate_finder(x, "entry_model")).run(PAYLOAD, CYCLE)
+    assert res.ok and res.repaired and res.attempts == 2
+    assert res.data["candidates"][0]["entry"] == 30407.25

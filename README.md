@@ -99,7 +99,7 @@ pip install -r requirements-dev.txt
 # Optional: tvdatafeed for live primary feed / to refresh fixtures
 pip install 'tvdatafeed @ git+https://github.com/rongardF/tvdatafeed'
 cp .env.example .env          # set OWNER_NAME; leave EQUITY blank until you want lot sizes
-pytest -q                     # 69 offline tests, no AWS / no LLM / no network send
+pytest -q                     # 72 offline tests, no AWS / no LLM / no network send
 python -m ict_pipeline.replay # full 14 Oct NY AM shadow run (NullNotifier)
 python scripts/adversarial_checks.py
 ```
@@ -166,6 +166,11 @@ errors (field path + message), then validates again:
   exactly as before (acceptance test 2).
 - Run log `agent_call` records `attempts` + `repaired`; EMF adds `AgentRepairAttempts` and
   `AgentRepaired`; repair tokens count against the daily budget.
+- The runner never invents or coerces prices or levels — it only re-validates the model's JSON.
+- Confluence, Probability and the Mentor check (`schemas.Confluence` / `Probability` / `Mentor`)
+  are computed in deterministic code in the orchestrator (`_score`); they do not go through
+  `AgentRunner`, so this loop does not apply to them. The Mentor's final owner message is
+  free-form text with a deterministic fallback, not a JSON envelope.
 
 ## Acceptance tests (SPEC §12)
 

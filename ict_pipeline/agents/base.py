@@ -83,6 +83,23 @@ class StaleOutputError(ValueError):
     timestamp would just invite it to invent a fresh one."""
 
 
+def _peek_as_of(text: str):
+    """Best-effort as_of from a model response. None if missing, unusable, or not timezone-aware."""
+    try:
+        start = text.find("{"); end = text.rfind("}")
+        raw = json.loads(text[start:end + 1] if start >= 0 else text)
+        if not isinstance(raw, dict) or "as_of" not in raw:
+            return None
+        v = raw["as_of"]
+        if isinstance(v, str):
+            v = datetime.fromisoformat(v)
+        if not isinstance(v, datetime) or v.tzinfo is None:
+            return None
+        return v
+    except Exception:
+        return None
+
+
 def _summarise_errors(e: Exception, limit: int = 6) -> str:
     """Compact, model-readable list of what failed (field path + message), capped in length."""
     if isinstance(e, ValidationError):
@@ -154,7 +171,14 @@ class AgentRunner:
                 break
             except (json.JSONDecodeError, ValidationError, ValueError, KeyError, TypeError) as e:
                 err = e
-                if isinstance(e, StaleOutputError) or attempts > self.max_repairs:
+                # Stale as_of is never repaired, even if the same payload also failed the schema:
+                # asking the model to "fix" it would invite a freshly invented timestamp.
+                if not isinstance(e, StaleOutputError):
+                    peeked = _peek_as_of(text) if "text" in locals() else None
+                    if peeked is not None and check_staleness(peeked, cycle_as_of):
+                        err = StaleOutputError(
+                            f"stale as_of={peeked.isoformat()} cycle={cycle_as_of.isoformat()}")
+                if isinstance(err, StaleOutputError) or attempts > self.max_repairs:
                     break
                 current = prompt + "\n\n" + REPAIR_INSTRUCTION.format(errors=_summarise_errors(e))
             except Exception as e:  # transport / model errors are not schema problems: no repair

@@ -49,6 +49,7 @@ flowchart TD
 
 Principles:
 - Agents never talk to each other directly. Each receives an input object from the orchestrator and returns **strict JSON** (validate with pydantic / JSON Schema; invalid output = agent result discarded and logged, never guessed).
+- Validate-and-repair: if a market-read or setup-finder JSON fails the schema, `AgentRunner` re-prompts that same agent **once** with the exact pydantic errors. One attempt only. Stale `as_of` is rejected outright and never repaired. The runner does not invent or coerce prices or levels; it only re-validates what the model returns. If the repair also fails, the output is discarded and logged, never guessed. Confluence, Probability and the Mentor check in §2.4 are computed in deterministic code (not via `AgentRunner`); the Mentor's final owner message is text with a deterministic fallback, not a JSON repair loop.
 - Every output carries `as_of` (SAST ISO timestamp of the last **closed** candle used) and `data_source`. The orchestrator rejects outputs older than the current cycle (fixes stale files).
 - Rules that decide money are in deterministic code (section 3), not prompts.
 - Markdown findings files become optional human-readable *renders* of the JSON, not the source of truth.
@@ -207,7 +208,7 @@ Implication: Probability agent should start from these base rates; most current 
 
 ## 12. Acceptance tests
 1. Kill-zone clock: for 2026-10-14 and 2026-11-03 the computed SAST windows match section 3 table (DST switch).
-2. Schema: every agent's output validates; a malformed output is discarded and logged, pipeline continues.
+2. Schema: every agent's output validates; a malformed output gets one repair attempt, then is discarded and logged if still invalid, and the pipeline continues.
 3. R:R: candidate with 1.9R after padding is blocked `RR_BELOW_2`; 2.0R passes.
 4. Stop padding: given raid extreme, spread and wick, stop is moved; if R:R then < 2, blocked `STOP_TOO_TIGHT`.
 5. Shared unit: B14 (XAU short) open at 0.5%; new correlated trade in same group gets 0 extra risk (split) or blocked per config.
