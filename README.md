@@ -52,6 +52,7 @@ flowchart TD
 | Decimal + `ROUND_HALF_UP` money maths | `ict_pipeline/money.py` (R:R, size, exp R) |
 | X-Ray, custom EMF metrics, CloudWatch dashboard + GetMetricWidgetImage | `ict_pipeline/observability.py`, `scripts/cloudwatch_dashboard.py` |
 | Cognito user pool + Lambda function-URL proxy frontend | `scripts/create_cognito_frontend.py`, `frontend/` |
+| Validate-and-repair (self-correction): failed schema → one re-prompt with exact pydantic errors | `ict_pipeline/agents/base.py` (`AgentRunner`), `tests/test_self_correction.py` |
 | Adversarial / injection suite | `tests/test_adversarial.py`, `scripts/adversarial_*.py` |
 | moto offline tests + GitHub Actions (`checkout@v7`, `setup-python@v7`, `ubuntu-24.04`) + gitleaks | `tests/`, `.github/workflows/offline-tests.yml` |
 | `.gitignore` never un-ignores `.env`; empty `aws-targets.json` | `.gitignore`, `agentcore/aws-targets.json` |
@@ -98,7 +99,7 @@ pip install -r requirements-dev.txt
 # Optional: tvdatafeed for live primary feed / to refresh fixtures
 pip install 'tvdatafeed @ git+https://github.com/rongardF/tvdatafeed'
 cp .env.example .env          # set OWNER_NAME; leave EQUITY blank until you want lot sizes
-pytest -q                     # 59 offline tests, no AWS / no LLM / no network send
+pytest -q                     # 72 offline tests, no AWS / no LLM / no network send
 python -m ict_pipeline.replay # full 14 Oct NY AM shadow run (NullNotifier)
 python scripts/adversarial_checks.py
 ```
@@ -148,6 +149,28 @@ Or: `python scripts/deploy.py --all`.
 | Notifier | `NullNotifier` / `FileNotifier` — **never sends** |
 | Bedrock Guardrail ApplyGuardrail | light regex filter; live script is `adversarial_guardrail.py` |
 | AgentCore Memory / Runtime / Cognito | helpers unit-tested; create scripts need AWS |
+
+## Self-correcting agent output (validate-and-repair)
+
+Every worker agent (Bias, Timeframe, Intermarket, Liquidity, Order Flow, Entry Model, Scalp,
+Ping-Pong) must return one JSON envelope that pydantic validates (`schemas.Envelope` /
+`schemas.FinderOutput`). Before, one malformed field (e.g. a price sent as a string) threw the
+whole read away. Now `AgentRunner` re-prompts the same agent **once** with the exact validation
+errors (field path + message), then validates again:
+
+- `max_repairs=1` by default (`0` restores single-shot behaviour); bounded, never loops.
+- Stale `as_of` is **never** repaired (the model must not invent a fresh timestamp); model or
+  transport errors are not retried as repairs.
+- A repaired answer still passes through the same validator and the hard-rule engine: code
+  decides, the LLM only formats. If the repair also fails, the read is discarded and logged
+  exactly as before (acceptance test 2).
+- Run log `agent_call` records `attempts` + `repaired`; EMF adds `AgentRepairAttempts` and
+  `AgentRepaired`; repair tokens count against the daily budget.
+- The runner never invents or coerces prices or levels — it only re-validates the model's JSON.
+- Confluence, Probability and the Mentor check (`schemas.Confluence` / `Probability` / `Mentor`)
+  are computed in deterministic code in the orchestrator (`_score`); they do not go through
+  `AgentRunner`, so this loop does not apply to them. The Mentor's final owner message is
+  free-form text with a deterministic fallback, not a JSON envelope.
 
 ## Acceptance tests (SPEC §12)
 

@@ -54,10 +54,12 @@ class RunLog:
             self.records.append(rec)
         return rec
 
-    def agent_call(self, agent: str, inp, output, latency_ms: float, tokens: int, valid: bool, error: str = ""):
+    def agent_call(self, agent: str, inp, output, latency_ms: float, tokens: int, valid: bool, error: str = "",
+                   attempts: int = 1, repaired: bool = False):
         self.add("agent_call", agent=agent, input_hash=input_hash(inp), output=output, latency_ms=round(latency_ms, 1),
-                 tokens=tokens, valid=valid, error=error)
-        emf({"AgentInvocations": 1, "AgentLatencyMs": latency_ms, "AgentTokens": tokens, "AgentInvalidOutput": 0 if valid else 1},
+                 tokens=tokens, valid=valid, error=error, attempts=attempts, repaired=repaired)
+        emf({"AgentInvocations": 1, "AgentLatencyMs": latency_ms, "AgentTokens": tokens, "AgentInvalidOutput": 0 if valid else 1,
+             "AgentRepairAttempts": max(0, attempts - 1), "AgentRepaired": 1 if repaired else 0},
             {"Agent": agent})
 
     def decision(self, candidate_id: str, passed: bool, reason: Optional[str], detail: str = ""):
