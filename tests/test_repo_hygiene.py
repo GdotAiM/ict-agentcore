@@ -27,11 +27,24 @@ def test_stack_resources():
         assert s in y
 
 
-def test_no_owner_equity_or_hilda_hardcoded():
+def test_no_owner_equity_or_client_name_hardcoded():
+    """Keep equity and the former client name out of the published tree."""
+    import subprocess
+    forbidden = "hilda"
     for p in (ROOT / "ict_pipeline").rglob("*.py"):
         t = p.read_text()
-        assert "Hilda" not in t, p
+        assert forbidden not in t.lower(), p
         assert not re.search(r"EQUITY\s*=\s*\d", t), p
+    skip = {"tests/test_repo_hygiene.py"}
+    for rel in subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True).splitlines():
+        if rel in skip:
+            continue
+        path = ROOT / rel
+        try:
+            t = path.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, IsADirectoryError):
+            continue
+        assert forbidden not in t.lower(), rel
 
 
 def test_kill_zone_crons_cover_zones():

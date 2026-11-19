@@ -56,7 +56,7 @@ Team rules in force: stops >=1 spread + normal 1m wick beyond the raid extreme; 
 - XAU: B14 array 4107.88 on any further bounce; Silver Bullet risk near 4066.5.
 
 ## Alerts this run
-- To Hilda: **YES** — GBP sell-side newly 4/5 (was 3/5 at 15:33). Also note B15 closed ~−0.46R and B14 still open (status, not a new idea; Entry Model already alerted B15).
+- To the trader: **YES** — GBP sell-side newly 4/5 (was 3/5 at 15:33). Also note B15 closed ~−0.46R and B14 still open (status, not a new idea; Entry Model already alerted B15).
 
 ## Nudges this run
 - **Liquidity Scout:** liquidity.md 15:42 still ranks NAS "intraday bullish" from bias.md 15:27 and uses that side of the intermarket disagree. bias.md **15:33** has NAS BEAR after the 15:15 close 30364.8 < 30369.8 (bear fails only on a 15m close above 30451.8). Please re-rank NAS from the 15:33 bias. Also NY AM/day low is now **30311.5 @15:38** (OANDA 1m); 30320/30346 sweeps are confirmed.
